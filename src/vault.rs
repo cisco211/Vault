@@ -10,7 +10,7 @@ fn help(a_long: bool)
 	println!("");
 	if a_long
 	{
-		match args::command().print_long_help()
+		match args::Args::cmd().print_long_help()
 		{
 			Ok(_) => (),
 			Err(_) => println!("Error: Failed to show long help text!"),
@@ -18,12 +18,11 @@ fn help(a_long: bool)
 	}
 	else
 	{
-		match args::command().print_help()
+		match args::Args::cmd().print_help()
 		{
 			Ok(_) => (),
 			Err(_) => println!("Error: Failed to show short help text!"),
 		}
-
 	}
 }
 
@@ -31,7 +30,7 @@ fn help(a_long: bool)
 pub fn run() -> bool
 {
 	// Get arguments
-	let l_args = args::parse();
+	let l_args = args::Args::read();
 
 	// Config given
 	if let Some(l_config) = l_args.config.as_deref()
@@ -63,14 +62,14 @@ pub fn run() -> bool
 			// All tasks
 			if l_task.eq("*")
 			{
-				println!("Vault at {}\n", util::time_to_string(util::time_now()));
+				println!("Vault at {}\n", util::Time::to_string(util::Time::now()));
 				return task_all(&l_cfg);
 			}
 
 			// One specific task
 			else
 			{
-				println!("Vault at {}\n", util::time_to_string(util::time_now()));
+				println!("Vault at {}\n", util::Time::to_string(util::Time::now()));
 				return task_one(&l_cfg, l_task);
 			}
 		}
@@ -158,22 +157,19 @@ fn task_command(a_cfg: &config::Config, a_task: &str) -> bool
 		None => return false,
 	};
 
-	let l_task_cmd = l_task_c.cmd.clone();
-	let l_task_path = l_task_c.path.clone();
-
 	// Create command
-	let mut l_cmd = std::process::Command::new(l_task_cmd);
+	let mut l_cmd = std::process::Command::new(l_task_c.cmd.clone());
 
 	// Set working directory
-	l_cmd.current_dir(l_task_path);
+	l_cmd.current_dir(l_task_c.path.clone());
 
 	// Now
-	let l_now = util::time_now();
+	let l_now = util::Time::now();
 
 	// Add arguments
 	for i_value in l_task_c.args
 	{
-		l_cmd.arg(i_value.replace("{NOW}", util::time_to_string(l_now).as_str()));
+		l_cmd.arg(i_value.replace("{NOW}", util::Time::to_string(l_now).as_str()));
 	}
 
 	// Execute command
@@ -182,7 +178,7 @@ fn task_command(a_cfg: &config::Config, a_task: &str) -> bool
 		Ok(m_status) => m_status,
 		Err(m_error) =>
 		{
-			println!("Error: Task '{}' failed to execute command '{}'!\n{}", a_task, l_task_c.cmd, m_error.to_string());
+			println!("Error: {}.{} failed to execute command '{}'!\n{}", l_task_c.config, a_task, l_task_c.cmd, m_error.to_string());
 			return false;
 		}
 	};
@@ -190,7 +186,7 @@ fn task_command(a_cfg: &config::Config, a_task: &str) -> bool
 	// Execution failed
 	if !l_status.success()
 	{
-		println!("Error: Task '{}' failed to execute command '{}'!", a_task, l_task_c.cmd);
+		println!("Error: {}.{} failed to execute command '{}'!", l_task_c.config, a_task, l_task_c.cmd);
 		return false;
 	}
 
@@ -198,17 +194,17 @@ fn task_command(a_cfg: &config::Config, a_task: &str) -> bool
 	let l_path = std::path::PathBuf::new().join(l_task_c.path);
 
 	// Load task
-	let mut l_task_t = match task::load(&l_path)
+	let mut l_task_t = match task::Task::load(&l_path)
 	{
 		Some(m_task) => m_task,
 		None => return false,
 	};
 
 	// Update expiration date
-	l_task_t.expires = util::time_to_string(l_now + chrono::Duration::seconds(l_task_c.interval));
+	l_task_t.expires = util::Time::to_string(l_now + chrono::Duration::seconds(l_task_c.interval));
 
 	// Save task
-	if !task::save(&l_path, &l_task_t)
+	if !task::Task::save(&l_path, &l_task_t)
 	{
 		return false;
 	}
@@ -238,27 +234,27 @@ fn task_prepare(a_cfg: &config::Config, a_task: &str) -> bool
 	}
 
 	// Create task if not exist
-	if !task::create(&l_task_c.path)
+	if !task::Task::create(&l_task_c.path)
 	{
 		return false;
 	}
 
 	// Load task
-	let l_task_t = match task::load(&l_task_c.path)
+	let l_task_t = match task::Task::load(&l_task_c.path)
 	{
 		Some(m_task) => m_task,
 		None => return false,
 	};
 
 	// Get expiration date
-	let l_expires = match util::time_from_string(l_task_t.expires.as_str())
+	let l_expires = match util::Time::from_string(l_task_t.expires.as_str())
 	{
 		Some(m_expires) => m_expires,
 		None => return false,
 	};
 
 	// Not yet expired
-	if util::time_now() < l_expires
+	if util::Time::now() < l_expires
 	{
 		println!("{}.{} skipped (expires: {}).\n", a_cfg.name, a_task, l_task_t.expires);
 		return false;

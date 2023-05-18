@@ -1,5 +1,4 @@
 // Use
-use clap::Command;
 use clap::CommandFactory;
 use clap::Parser;
 
@@ -25,14 +24,18 @@ pub struct Args
 	pub task: Option<String>,
 }
 
-/// Command
-pub fn command() -> Command
+/// Args impl
+impl Args
 {
-	return Args::command();
-}
+	/// Cmd
+	pub fn cmd() -> clap::Command
+	{
+		return Args::command();
+	}
 
-/// Parse
-pub fn parse() -> Args
-{
-	return Args::parse();
+	/// Read
+	pub fn read() -> Args
+	{
+		return Args::parse();
+	}
 }

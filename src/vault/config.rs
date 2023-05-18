@@ -25,7 +25,7 @@ impl Config
 		}
 		else
 		{
-			l_path = match std::path::PathBuf::new().join(util::path_program()).join(a_path).canonicalize()
+			l_path = match std::path::PathBuf::new().join(util::Path::program()).join(a_path).canonicalize()
 			{
 				Ok(m_path) => m_path,
 				Err(m_error) =>
@@ -68,6 +68,9 @@ pub struct Task
 	/// Cmd
 	pub cmd: String,
 
+	/// Config
+	pub config: String,
+
 	/// Enabled
 	pub enabled: bool,
 
@@ -76,7 +79,11 @@ pub struct Task
 
 	/// Path
 	pub path: std::path::PathBuf,
+
+	/// Task
+	pub task: String,
 }
+
 
 /// Task impl
 impl Task
@@ -91,7 +98,13 @@ impl Task
 		}
 		match a_cfg.tasks.get(a_task)
 		{
-			Some(m_task) => Some(m_task.clone()),
+			Some(m_task) =>
+			{
+				let mut l_task = m_task.clone();
+				l_task.config = a_cfg.name.to_string();
+				l_task.task = a_task.to_string();
+				Some(l_task)
+			},
 			None => None,
 		}
 	}
@@ -152,10 +165,12 @@ impl Default for Task
 		Task
 		{
 			args: std::vec::Vec::new(),
-			cmd: "".to_string(),
+			cmd: String::new(),
+			config: String::new(),
 			enabled: false,
 			interval: 0,
-			path: std::path::PathBuf::new()
+			path: std::path::PathBuf::new(),
+			task: String::new(),
 		}
 	}
 }
