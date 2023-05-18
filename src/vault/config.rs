@@ -1,18 +1,20 @@
 // Use
-use serde::Deserialize;
+use crate::vault::config;
+use crate::vault::util;
 
 // Config struct
-#[derive(Debug, Deserialize)]
+#[derive(Debug, serde::Deserialize)]
 pub struct Config
 {
 	/// Config name
 	pub name: String,
+
+	/// Tasks
+	pub tasks: toml::Table,
 }
 
-/// Get config
-///
-/// Get configuration from given path.
-pub fn get(path: &std::path::Path) -> Option<Config>
+/// Load
+pub fn load(path: &std::path::Path) -> Option<Config>
 {
 	let p : std::path::PathBuf;
 	if path.is_absolute()
@@ -21,7 +23,7 @@ pub fn get(path: &std::path::Path) -> Option<Config>
 	}
 	else
 	{
-		match std::path::PathBuf::new().join(crate::vault::util::get_path_program()).join(path).canonicalize()
+		match std::path::PathBuf::new().join(util::get_path_program()).join(path).canonicalize()
 		{
 			Ok(o) => p = o,
 			Err(e) =>
@@ -51,4 +53,57 @@ pub fn get(path: &std::path::Path) -> Option<Config>
 			return None;
 		}
 	}
+}
+
+/// Task get
+pub fn task_get(cfg: &config::Config, task: &str) -> Option<toml::map::Map<String, toml::Value>>
+{
+	if !cfg.tasks.contains_key(task)
+	{
+		println!("Error: Configuration '{}' task '{}' does not exist!", cfg.name, task);
+		return None;
+	}
+	match cfg.tasks[task].as_table()
+	{
+		Some(t_) => Some(t_.clone()),
+		None =>
+		{
+			println!("Error: Configuration '{}' task '{}' is not readable!", cfg.name, task);
+			return None;
+		}
+	}
+}
+
+pub fn task_valid(key: &str, value: &toml::map::Map<String, toml::Value>) -> bool
+{
+		// Key cmd not found
+		if !value.contains_key("cmd")
+		{
+			println!("Error: Task '{}' does not have a cmd key!", key);
+			return false;
+		}
+
+		// Value cmd is not string
+		if !value["cmd"].is_str()
+		{
+			println!("Error: Task '{}' cmd value is not a string!", key);
+			return false;
+		}
+
+		// Key args not found
+		if !value.contains_key("args")
+		{
+			println!("Error: Task '{}' does not have an args key!", key);
+			return false;
+		}
+
+		// Value args is not array
+		if !value["args"].is_array()
+		{
+			println!("Error: Tsk '{}' args value is not an array!", key);
+			return false;
+		}
+
+		// Done
+		return true;
 }

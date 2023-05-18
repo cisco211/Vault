@@ -3,6 +3,20 @@ mod args;
 mod config;
 mod util;
 
+/// Do command
+fn do_command(_cfg: &config::Config, _task: &str) -> bool
+{
+	// TODO: Implement do_command.
+	true
+}
+
+/// Do rotation
+fn do_rotation(_cfg: &config::Config, _task: &str) -> bool
+{
+	// TODO: Implement do_rotation.
+	true
+}
+
 /// Run help
 ///
 /// Prints the help text to the console.
@@ -49,13 +63,12 @@ pub fn run() -> bool
 	// Config given
 	if let Some(arg_config) = args.config.as_deref()
 	{
-		// Get configuration
-		let cfg : config::Config;
-		match config::get(arg_config)
+		// Load configuration
+		let cfg = match config::load(arg_config)
 		{
-			Some(c) => cfg = c,
+			Some(c) => c,
 			None => return false,
-		}
+		};
 
 		// No name
 		if cfg.name.is_empty()
@@ -78,14 +91,14 @@ pub fn run() -> bool
 			if arg_task.eq("*")
 			{
 				println!("Running all tasks from configuration '{}'...", cfg.name);
-				return tasks(cfg);
+				return tasks(&cfg);
 			}
 
 			// One specific task
 			else
 			{
 				println!("Running task '{}' from configuration '{}'...", arg_task, cfg.name);
-				return task(cfg, arg_task);
+				return task(&cfg, arg_task);
 			}
 		}
 
@@ -110,19 +123,50 @@ pub fn run() -> bool
 /// Run task
 ///
 /// Run a task from config.
-fn task(cfg: config::Config, task: &str) -> bool
+fn task(cfg: &config::Config, task: &str) -> bool
 {
-	// TODO: Run the task.
-	println!("Debug: vault::task\n    {:?}\n    {:?}", cfg, task);
-	return false;
+	// Debug
+	println!("Debug: vault::task\n    cfg = {:?}\n    task = {:?}", cfg, task);
+
+	// Get task
+	let t = match config::task_get(cfg, task)
+	{
+		Some(t_) => t_,
+		None => return false,
+	};
+
+	// Task is not valid
+	if !config::task_valid(task, &t)
+	{
+		return false;
+	}
+
+	// Do rotation
+	if !do_rotation(cfg, task)
+	{
+		return false;
+	}
+
+	// Do command
+	if !do_command(cfg, task)
+	{
+		return false;
+	}
+
+	// Done
+	println!("Debug: vault::task done!");
+	return true;
 }
 
 /// Run tasks
 ///
 /// Run all tasks from config.
-fn tasks(cfg: config::Config) -> bool
+fn tasks(cfg: &config::Config) -> bool
 {
+	// Debug
+	println!("Debug: vault::tasks\n    cfg = {:?}", cfg);
+
 	// TODO: Iterate over all tasks and call run_task.
-	println!("Debug: vault::tasks\n    {:?}", cfg);
-	return false;
+	println!("Debug: vault::tasks done!");
+	return true;
 }
