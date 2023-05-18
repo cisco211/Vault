@@ -76,31 +76,45 @@ pub fn task_get(cfg: &config::Config, task: &str) -> Option<toml::map::Map<Strin
 
 pub fn task_valid(key: &str, value: &toml::map::Map<String, toml::Value>) -> bool
 {
-		// Key cmd not found
-		if !value.contains_key("cmd")
-		{
-			println!("Error: Task '{}' does not have a cmd key!", key);
-			return false;
-		}
-
-		// Value cmd is not string
-		if !value["cmd"].is_str()
-		{
-			println!("Error: Task '{}' cmd value is not a string!", key);
-			return false;
-		}
-
-		// Key args not found
+		// Args not found
 		if !value.contains_key("args")
 		{
-			println!("Error: Task '{}' does not have an args key!", key);
+			println!("Error: Task '{}' does not have an args array!", key);
 			return false;
 		}
 
-		// Value args is not array
+		// Args is not array
 		if !value["args"].is_array()
 		{
-			println!("Error: Tsk '{}' args value is not an array!", key);
+			println!("Error: Task '{}' args is not an array!", key);
+			return false;
+		}
+
+		// Cmd not found
+		if !value.contains_key("cmd")
+		{
+			println!("Error: Task '{}' does not have a cmd string!", key);
+			return false;
+		}
+
+		// Cmd is not string
+		if !value["cmd"].is_str()
+		{
+			println!("Error: Task '{}' cmd is not a string!", key);
+			return false;
+		}
+
+		// Path not found
+		if !value.contains_key("path")
+		{
+			println!("Error: Task '{}' does not have a path string!", key);
+			return false;
+		}
+
+		// Path is not string
+		if !value["path"].is_str()
+		{
+			println!("Error: Task '{}' path is not a string!", key);
 			return false;
 		}
 

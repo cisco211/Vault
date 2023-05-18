@@ -4,10 +4,97 @@ mod config;
 mod util;
 
 /// Do command
-fn do_command(_cfg: &config::Config, _task: &str) -> bool
+fn do_command(cfg: &config::Config, task: &str) -> bool
 {
-	// TODO: Implement do_command.
-	true
+	// Get task
+	let t = match config::task_get(cfg, task)
+	{
+		Some(t_) => t_,
+		None => return false,
+	};
+
+	// Get args array
+	let a = match t["args"].as_array()
+	{
+		Some(c_) => c_,
+		None => return false,
+	};
+
+	// Get cmd string
+	let c = match t["cmd"].as_str()
+	{
+		Some(c_) => c_,
+		None => return false,
+	};
+
+	// Get path string
+	let p = match t["path"].as_str()
+	{
+		Some(p_) => p_,
+		None => return false,
+	};
+
+	// Create command
+	let mut cmd = std::process::Command::new(c);
+
+	// Set working directory
+	cmd.current_dir(p);
+
+	// Add arguments
+	for v in a
+	{
+		match v.as_str()
+		{
+			Some(v_) => cmd.arg(v_),
+			None => continue,
+		};
+	}
+
+	// Execute command
+	match cmd.status()
+	{
+		Ok(s_) => return s_.success(),
+		Err(e) =>
+		{
+			println!("Error: Task '{}' failed to execute command '{}'!\n{}", task, c, e.to_string());
+			return false;
+		}
+	};
+}
+
+/// Do prepare
+fn do_prepare(cfg: &config::Config, task: &str) -> bool
+{
+	// Get task
+	let t = match config::task_get(cfg, task)
+	{
+		Some(t_) => t_,
+		None => return false,
+	};
+
+	// Get path string
+	let p = match t["path"].as_str()
+	{
+		Some(p_) => p_,
+		None => return false,
+	};
+
+	// Get path buffer
+	let path = std::path::PathBuf::new().join(p);
+
+	// Create path recursively
+	match std::fs::create_dir_all(path.to_path_buf())
+	{
+		Ok(_) => (),
+		Err(e) =>
+		{
+			println!("Error: Task '{}' failed to create path path '{}'!\n{}", task, path.display(), e.to_string());
+			return false;
+		}
+	}
+
+	// Done
+	return true;
 }
 
 /// Do rotation
@@ -90,14 +177,12 @@ pub fn run() -> bool
 			// All tasks
 			if arg_task.eq("*")
 			{
-				println!("Running all tasks from configuration '{}'...", cfg.name);
 				return tasks(&cfg);
 			}
 
 			// One specific task
 			else
 			{
-				println!("Running task '{}' from configuration '{}'...", arg_task, cfg.name);
 				return task(&cfg, arg_task);
 			}
 		}
@@ -125,8 +210,8 @@ pub fn run() -> bool
 /// Run a task from config.
 fn task(cfg: &config::Config, task: &str) -> bool
 {
-	// Debug
-	println!("Debug: vault::task\n    cfg = {:?}\n    task = {:?}", cfg, task);
+	// Hail
+	println!("Running configuration '{}' task '{}'...", cfg.name, task);
 
 	// Get task
 	let t = match config::task_get(cfg, task)
@@ -137,6 +222,12 @@ fn task(cfg: &config::Config, task: &str) -> bool
 
 	// Task is not valid
 	if !config::task_valid(task, &t)
+	{
+		return false;
+	}
+
+	// Do prepare
+	if !do_prepare(cfg, task)
 	{
 		return false;
 	}
@@ -154,7 +245,6 @@ fn task(cfg: &config::Config, task: &str) -> bool
 	}
 
 	// Done
-	println!("Debug: vault::task done!");
 	return true;
 }
 
@@ -163,10 +253,22 @@ fn task(cfg: &config::Config, task: &str) -> bool
 /// Run all tasks from config.
 fn tasks(cfg: &config::Config) -> bool
 {
-	// Debug
-	println!("Debug: vault::tasks\n    cfg = {:?}", cfg);
+	// Hail
+	println!("Running configuration '{}' all tasks...", cfg.name);
 
-	// TODO: Iterate over all tasks and call run_task.
-	println!("Debug: vault::tasks done!");
-	return true;
+	// Status bool
+	let mut b = true;
+
+	// Iterate over tasks
+	for k in cfg.tasks.keys()
+	{
+		// Run task
+		if !task(cfg, k.as_str())
+		{
+			b = false;
+		}
+	}
+
+	// Done
+	return b;
 }
