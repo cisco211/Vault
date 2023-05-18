@@ -96,7 +96,7 @@ pub fn path(a_path: &std::path::PathBuf) -> std::path::PathBuf
 	return std::path::PathBuf::new().join(a_path).join("vault.toml");
 }
 
-// Save
+/// Save
 pub fn save(a_path: &std::path::PathBuf, a_task: &Task) -> bool
 {
 	// Get path

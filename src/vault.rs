@@ -4,8 +4,160 @@ mod config;
 mod task;
 mod util;
 
-/// Do command
-fn do_command(a_cfg: &config::Config, a_task: &str) -> bool
+/// Help
+fn help(a_long: bool)
+{
+	println!("");
+	if a_long
+	{
+		match args::command().print_long_help()
+		{
+			Ok(_) => (),
+			Err(_) => println!("Error: Failed to show long help text!"),
+		}
+	}
+	else
+	{
+		match args::command().print_help()
+		{
+			Ok(_) => (),
+			Err(_) => println!("Error: Failed to show short help text!"),
+		}
+
+	}
+}
+
+/// Run
+pub fn run() -> bool
+{
+	// Get arguments
+	let l_args = args::parse();
+
+	// Config given
+	if let Some(l_config) = l_args.config.as_deref()
+	{
+		// Load configuration
+		let l_cfg = match config::load(l_config)
+		{
+			Some(m_cfg) => m_cfg,
+			None => return false,
+		};
+
+		// No name
+		if l_cfg.name.is_empty()
+		{
+			println!("Error: Configuration file '{}' has no name!", l_config.display());
+			return false;
+		}
+
+		// Task given
+		if let Some(l_task) = l_args.task.as_deref()
+		{
+			// Empty task
+			if l_task.is_empty()
+			{
+				println!("Error: Task is empty!");
+				return false;
+			}
+
+			// All tasks
+			if l_task.eq("*")
+			{
+				return task_all(&l_cfg);
+			}
+
+			// One specific task
+			else
+			{
+				return task_one(&l_cfg, l_task);
+			}
+		}
+
+		// No task given
+		else
+		{
+			println!("Error: No task specified!");
+			help(false);
+			return false;
+		}
+	}
+
+	// No config given
+	else
+	{
+		println!("Error: No configuration file specified!");
+		help(false);
+		return false;
+	}
+}
+
+/// Task one
+fn task_one(a_cfg: &config::Config, a_task: &str) -> bool
+{
+	// Hail
+	println!("{}.{} checking...", a_cfg.name, a_task);
+
+	// Get task
+	let l_task = match config::task_get(a_cfg, a_task)
+	{
+		Some(m_task) => m_task,
+		None => return false,
+	};
+
+	// Task is not valid
+	if !config::task_valid(a_task, &l_task)
+	{
+		return false;
+	}
+
+	// Do prepare
+	if !task_prepare(a_cfg, a_task)
+	{
+		return false;
+	}
+
+	// Do rotation
+	if !task_rotation(a_cfg, a_task)
+	{
+		return false;
+	}
+
+	// Do command
+	if !task_command(a_cfg, a_task)
+	{
+		return false;
+	}
+
+	// Done
+	return true;
+}
+
+/// Task all
+fn task_all(a_cfg: &config::Config) -> bool
+{
+	// Hail
+	println!("{}.* checking...", a_cfg.name);
+	println!("");
+
+	// Status bool
+	let mut l_status = true;
+
+	// Iterate over tasks
+	for i_task in a_cfg.tasks.keys()
+	{
+		// Run task
+		if !task_one(a_cfg, i_task.as_str())
+		{
+			l_status = false;
+		}
+	}
+
+	// Done
+	return l_status;
+}
+
+/// Task command
+fn task_command(a_cfg: &config::Config, a_task: &str) -> bool
 {
 	// Hail
 	println!("{}.{} executing...", a_cfg.name, a_task);
@@ -106,8 +258,8 @@ fn do_command(a_cfg: &config::Config, a_task: &str) -> bool
 	return true;
 }
 
-/// Do prepare
-fn do_prepare(a_cfg: &config::Config, a_task: &str) -> bool
+/// Task prepare
+fn task_prepare(a_cfg: &config::Config, a_task: &str) -> bool
 {
 	// Hail
 	println!("{}.{} preparing...", a_cfg.name, a_task);
@@ -157,172 +309,12 @@ fn do_prepare(a_cfg: &config::Config, a_task: &str) -> bool
 	return true;
 }
 
-/// Do rotation
-fn do_rotation(a_cfg: &config::Config, a_task: &str) -> bool
+/// Task rotation
+fn task_rotation(a_cfg: &config::Config, a_task: &str) -> bool
 {
 	// Hail
 	println!("{}.{} rotating...", a_cfg.name, a_task);
 
 	// TODO: Implement do_rotation.
 	true
-}
-
-/// Run help
-///
-/// Prints the help text to the console.
-fn help(a_long: bool)
-{
-	println!("");
-	if a_long
-	{
-		match args::command().print_long_help()
-		{
-			Ok(_) => (),
-			Err(_) => println!("Error: Failed to show long help text!"),
-		}
-	}
-	else
-	{
-		match args::command().print_help()
-		{
-			Ok(_) => (),
-			Err(_) => println!("Error: Failed to show short help text!"),
-		}
-
-	}
-}
-
-/// Run
-///
-/// Run the program.
-pub fn run() -> bool
-{
-	// Get arguments
-	let l_args = args::parse();
-
-	// Config given
-	if let Some(l_config) = l_args.config.as_deref()
-	{
-		// Load configuration
-		let l_cfg = match config::load(l_config)
-		{
-			Some(m_cfg) => m_cfg,
-			None => return false,
-		};
-
-		// No name
-		if l_cfg.name.is_empty()
-		{
-			println!("Error: Configuration file '{}' has no name!", l_config.display());
-			return false;
-		}
-
-		// Task given
-		if let Some(l_task) = l_args.task.as_deref()
-		{
-			// Empty task
-			if l_task.is_empty()
-			{
-				println!("Error: Task is empty!");
-				return false;
-			}
-
-			// All tasks
-			if l_task.eq("*")
-			{
-				return tasks(&l_cfg);
-			}
-
-			// One specific task
-			else
-			{
-				return task(&l_cfg, l_task);
-			}
-		}
-
-		// No task given
-		else
-		{
-			println!("Error: No task specified!");
-			help(false);
-			return false;
-		}
-	}
-
-	// No config given
-	else
-	{
-		println!("Error: No configuration file specified!");
-		help(false);
-		return false;
-	}
-}
-
-/// Run task
-///
-/// Run a task from config.
-fn task(a_cfg: &config::Config, a_task: &str) -> bool
-{
-	// Hail
-	println!("{}.{} checking...", a_cfg.name, a_task);
-
-	// Get task
-	let l_task = match config::task_get(a_cfg, a_task)
-	{
-		Some(m_task) => m_task,
-		None => return false,
-	};
-
-	// Task is not valid
-	if !config::task_valid(a_task, &l_task)
-	{
-		return false;
-	}
-
-	// Do prepare
-	if !do_prepare(a_cfg, a_task)
-	{
-		return false;
-	}
-
-	// Do rotation
-	if !do_rotation(a_cfg, a_task)
-	{
-		return false;
-	}
-
-	// Do command
-	if !do_command(a_cfg, a_task)
-	{
-		return false;
-	}
-
-	// Done
-	return true;
-}
-
-/// Run tasks
-///
-/// Run all tasks from config.
-fn tasks(a_cfg: &config::Config) -> bool
-{
-	// Hail
-	println!("{}.* checking...", a_cfg.name);
-	println!("");
-
-	// Status bool
-	let mut l_status = true;
-
-	// Iterate over tasks
-	for i_task in a_cfg.tasks.keys()
-	{
-		// Run task
-		if !task(a_cfg, i_task.as_str())
-		{
-			l_status = false;
-		}
-	}
-
-	// Done
-	return l_status;
 }

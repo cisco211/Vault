@@ -1,6 +1,4 @@
 /// Path program
-///
-/// Gets program path without executable filename.
 pub fn path_program() -> std::path::PathBuf
 {
 	match std::env::current_exe()
@@ -18,8 +16,6 @@ pub fn path_program() -> std::path::PathBuf
 }
 
 /// Time from string
-///
-/// Get given string as time.
 pub fn time_from_string(a_str: &str) -> Option<chrono::DateTime<chrono::Utc>>
 {
 	use chrono::TimeZone;
@@ -31,16 +27,12 @@ pub fn time_from_string(a_str: &str) -> Option<chrono::DateTime<chrono::Utc>>
 }
 
 /// Time now
-///
-/// Get current time.
 pub fn time_now() -> chrono::DateTime<chrono::Utc>
 {
 	return chrono::offset::Utc::now();
 }
 
 /// Time to string
-///
-/// Get given time as string.
 pub fn time_to_string(a_dt: chrono::DateTime<chrono::Utc>) -> String
 {
 	return a_dt.to_string().replace(" ", "_").replace("_UTC", "");
@@ -49,9 +41,15 @@ pub fn time_to_string(a_dt: chrono::DateTime<chrono::Utc>) -> String
 /// Tests module
 mod tests
 {
+	/// Smoke path
+	#[test]
+	fn smoke_path()
+	{
+		use crate::vault::util;
+		assert!(!util::path_program().to_str().unwrap().eq("."));
+	}
+
 	/// Smoke time
-	///
-	/// Smoke test time functions.
 	#[test]
 	fn smoke_time()
 	{
