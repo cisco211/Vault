@@ -23,7 +23,7 @@ pub fn load(path: &std::path::Path) -> Option<Config>
 	}
 	else
 	{
-		match std::path::PathBuf::new().join(util::get_path_program()).join(path).canonicalize()
+		match std::path::PathBuf::new().join(util::path_program()).join(path).canonicalize()
 		{
 			Ok(o) => p = o,
 			Err(e) =>

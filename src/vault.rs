@@ -40,12 +40,15 @@ fn do_command(cfg: &config::Config, task: &str) -> bool
 	// Set working directory
 	cmd.current_dir(p);
 
+	// Create now string
+	let n = util::time_to_string(util::time_now());
+
 	// Add arguments
 	for v in a
 	{
 		match v.as_str()
 		{
-			Some(v_) => cmd.arg(v_),
+			Some(v_) => cmd.arg(v_.replace("{NOW}", n.as_str())),
 			None => continue,
 		};
 	}
@@ -143,7 +146,7 @@ pub fn run() -> bool
 		println!("Debug");
 		println!("{{");
 		println!("    args: {:?},", args);
-		println!("    path_program: {:?},", util::get_path_program());
+		println!("    prwd: {:?},", util::path_program());
 		println!("}}\n");
 	}
 
