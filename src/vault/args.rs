@@ -19,12 +19,6 @@ pub struct Args
 	#[arg(short, long, value_name = "FILE")]
 	pub config: Option<std::path::PathBuf>,
 
-	/// Debug flag
-	///
-	/// Shows additional debug information.
-	#[arg(short, long, default_value_t = false)]
-	pub debug: bool,
-
 	/// Task to be executed
 	///
 	/// Empty = Do nothing.

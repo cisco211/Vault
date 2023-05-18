@@ -1,99 +1,156 @@
 // Mod
 mod args;
 mod config;
+mod task;
 mod util;
 
 /// Do command
-fn do_command(cfg: &config::Config, task: &str) -> bool
+fn do_command(a_cfg: &config::Config, a_task: &str) -> bool
 {
+	// Hail
+	println!("{}.{} executing...", a_cfg.name, a_task);
+
 	// Get task
-	let t = match config::task_get(cfg, task)
+	let l_task_c = match config::task_get(a_cfg, a_task)
 	{
-		Some(t_) => t_,
+		Some(m_task) => m_task,
 		None => return false,
 	};
 
 	// Get args array
-	let a = match t["args"].as_array()
+	let l_task_args = match l_task_c["args"].as_array()
 	{
-		Some(c_) => c_,
+		Some(m_value) => m_value,
 		None => return false,
 	};
 
 	// Get cmd string
-	let c = match t["cmd"].as_str()
+	let l_task_cmd = match l_task_c["cmd"].as_str()
 	{
-		Some(c_) => c_,
+		Some(m_value) => m_value,
 		None => return false,
 	};
 
 	// Get path string
-	let p = match t["path"].as_str()
+	let l_task_path = match l_task_c["path"].as_str()
 	{
-		Some(p_) => p_,
+		Some(m_value) => m_value,
+		None => return false,
+	};
+
+	// Get interval integer
+	let l_task_interval = match l_task_c["interval"].as_integer()
+	{
+		Some(m_value) => m_value,
 		None => return false,
 	};
 
 	// Create command
-	let mut cmd = std::process::Command::new(c);
+	let mut l_cmd = std::process::Command::new(l_task_cmd);
 
 	// Set working directory
-	cmd.current_dir(p);
+	l_cmd.current_dir(l_task_path);
 
-	// Create now string
-	let n = util::time_to_string(util::time_now());
+	// Now
+	let l_now = util::time_now();
 
 	// Add arguments
-	for v in a
+	for i_value in l_task_args
 	{
-		match v.as_str()
+		match i_value.as_str()
 		{
-			Some(v_) => cmd.arg(v_.replace("{NOW}", n.as_str())),
+			Some(m_value) => l_cmd.arg(m_value.replace("{NOW}", util::time_to_string(l_now).as_str())),
 			None => continue,
 		};
 	}
 
 	// Execute command
-	match cmd.status()
+	let l_status = match l_cmd.status()
 	{
-		Ok(s_) => return s_.success(),
-		Err(e) =>
+		Ok(m_status) => m_status,
+		Err(m_error) =>
 		{
-			println!("Error: Task '{}' failed to execute command '{}'!\n{}", task, c, e.to_string());
+			println!("Error: Task '{}' failed to execute command '{}'!\n{}", a_task, l_task_cmd, m_error.to_string());
 			return false;
 		}
 	};
+
+	// Execution failed
+	if !l_status.success()
+	{
+		println!("Error: Task '{}' failed to execute command '{}'!", a_task, l_task_cmd);
+		return false;
+	}
+
+	// Get task file path
+	let l_path = std::path::PathBuf::new().join(l_task_path);
+
+	// Load task
+	let mut l_task_t = match task::load(&l_path)
+	{
+		Some(m_task) => m_task,
+		None => return false,
+	};
+
+	// Update expiration date
+	l_task_t.expires = util::time_to_string(l_now + chrono::Duration::seconds(l_task_interval));
+
+	// Save task
+	if !task::save(&l_path, &l_task_t)
+	{
+		return false;
+	}
+
+	// Done
+	println!("{}.{} done (next: {}).\n", a_cfg.name, a_task, l_task_t.expires);
+	return true;
 }
 
 /// Do prepare
-fn do_prepare(cfg: &config::Config, task: &str) -> bool
+fn do_prepare(a_cfg: &config::Config, a_task: &str) -> bool
 {
-	// Get task
-	let t = match config::task_get(cfg, task)
+	// Hail
+	println!("{}.{} preparing...", a_cfg.name, a_task);
+
+	// Get config task
+	let l_task_c = match config::task_get(a_cfg, a_task)
 	{
-		Some(t_) => t_,
+		Some(m_task) => m_task,
 		None => return false,
 	};
 
 	// Get path string
-	let p = match t["path"].as_str()
+	let l_path = match l_task_c["path"].as_str()
 	{
-		Some(p_) => p_,
+		Some(m_path) => std::path::PathBuf::new().join(m_path),
 		None => return false,
 	};
 
-	// Get path buffer
-	let path = std::path::PathBuf::new().join(p);
-
-	// Create path recursively
-	match std::fs::create_dir_all(path.to_path_buf())
+	// Create task if not exist
+	if !task::create(&l_path)
 	{
-		Ok(_) => (),
-		Err(e) =>
-		{
-			println!("Error: Task '{}' failed to create path path '{}'!\n{}", task, path.display(), e.to_string());
-			return false;
-		}
+		return false;
+	}
+
+	// Load task
+	let l_task_t = match task::load(&l_path)
+	{
+		Some(m_task) => m_task,
+		None => return false,
+	};
+
+	// Get expiration date
+	let l_expires = match util::time_from_string(l_task_t.expires.as_str())
+	{
+		Some(m_expires) => m_expires,
+		None => return false,
+	};
+
+	// Not yet expired
+	if util::time_now() < l_expires
+	{
+		println!("{}.{} skipped (expires: {}).\n", a_cfg.name, a_task, l_task_t.expires);
+		return false;
 	}
 
 	// Done
@@ -101,8 +158,11 @@ fn do_prepare(cfg: &config::Config, task: &str) -> bool
 }
 
 /// Do rotation
-fn do_rotation(_cfg: &config::Config, _task: &str) -> bool
+fn do_rotation(a_cfg: &config::Config, a_task: &str) -> bool
 {
+	// Hail
+	println!("{}.{} rotating...", a_cfg.name, a_task);
+
 	// TODO: Implement do_rotation.
 	true
 }
@@ -110,10 +170,10 @@ fn do_rotation(_cfg: &config::Config, _task: &str) -> bool
 /// Run help
 ///
 /// Prints the help text to the console.
-fn help(long: bool)
+fn help(a_long: bool)
 {
 	println!("");
-	if long
+	if a_long
 	{
 		match args::command().print_long_help()
 		{
@@ -138,55 +198,45 @@ fn help(long: bool)
 pub fn run() -> bool
 {
 	// Get arguments
-	let args = args::parse();
-
-	// Debug output
-	if args.debug
-	{
-		println!("Debug");
-		println!("{{");
-		println!("    args: {:?},", args);
-		println!("    prwd: {:?},", util::path_program());
-		println!("}}\n");
-	}
+	let l_args = args::parse();
 
 	// Config given
-	if let Some(arg_config) = args.config.as_deref()
+	if let Some(l_config) = l_args.config.as_deref()
 	{
 		// Load configuration
-		let cfg = match config::load(arg_config)
+		let l_cfg = match config::load(l_config)
 		{
-			Some(c) => c,
+			Some(m_cfg) => m_cfg,
 			None => return false,
 		};
 
 		// No name
-		if cfg.name.is_empty()
+		if l_cfg.name.is_empty()
 		{
-			println!("Error: Configuration file '{}' has no name!", arg_config.display());
+			println!("Error: Configuration file '{}' has no name!", l_config.display());
 			return false;
 		}
 
 		// Task given
-		if let Some(arg_task) = args.task.as_deref()
+		if let Some(l_task) = l_args.task.as_deref()
 		{
 			// Empty task
-			if arg_task.is_empty()
+			if l_task.is_empty()
 			{
 				println!("Error: Task is empty!");
 				return false;
 			}
 
 			// All tasks
-			if arg_task.eq("*")
+			if l_task.eq("*")
 			{
-				return tasks(&cfg);
+				return tasks(&l_cfg);
 			}
 
 			// One specific task
 			else
 			{
-				return task(&cfg, arg_task);
+				return task(&l_cfg, l_task);
 			}
 		}
 
@@ -211,38 +261,38 @@ pub fn run() -> bool
 /// Run task
 ///
 /// Run a task from config.
-fn task(cfg: &config::Config, task: &str) -> bool
+fn task(a_cfg: &config::Config, a_task: &str) -> bool
 {
 	// Hail
-	println!("Running configuration '{}' task '{}'...", cfg.name, task);
+	println!("{}.{} checking...", a_cfg.name, a_task);
 
 	// Get task
-	let t = match config::task_get(cfg, task)
+	let l_task = match config::task_get(a_cfg, a_task)
 	{
-		Some(t_) => t_,
+		Some(m_task) => m_task,
 		None => return false,
 	};
 
 	// Task is not valid
-	if !config::task_valid(task, &t)
+	if !config::task_valid(a_task, &l_task)
 	{
 		return false;
 	}
 
 	// Do prepare
-	if !do_prepare(cfg, task)
+	if !do_prepare(a_cfg, a_task)
 	{
 		return false;
 	}
 
 	// Do rotation
-	if !do_rotation(cfg, task)
+	if !do_rotation(a_cfg, a_task)
 	{
 		return false;
 	}
 
 	// Do command
-	if !do_command(cfg, task)
+	if !do_command(a_cfg, a_task)
 	{
 		return false;
 	}
@@ -254,24 +304,25 @@ fn task(cfg: &config::Config, task: &str) -> bool
 /// Run tasks
 ///
 /// Run all tasks from config.
-fn tasks(cfg: &config::Config) -> bool
+fn tasks(a_cfg: &config::Config) -> bool
 {
 	// Hail
-	println!("Running configuration '{}' all tasks...", cfg.name);
+	println!("{}.* checking...", a_cfg.name);
+	println!("");
 
 	// Status bool
-	let mut b = true;
+	let mut l_status = true;
 
 	// Iterate over tasks
-	for k in cfg.tasks.keys()
+	for i_task in a_cfg.tasks.keys()
 	{
 		// Run task
-		if !task(cfg, k.as_str())
+		if !task(a_cfg, i_task.as_str())
 		{
-			b = false;
+			l_status = false;
 		}
 	}
 
 	// Done
-	return b;
+	return l_status;
 }

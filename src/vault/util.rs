@@ -5,28 +5,28 @@ pub fn path_program() -> std::path::PathBuf
 {
 	match std::env::current_exe()
 	{
-		Ok(path) =>
+		Ok(m_path) =>
 		{
-			match path.parent()
+			match m_path.parent()
 			{
-				Some(parent) => return parent.to_path_buf(),
+				Some(m_parent) => return m_parent.to_path_buf(),
 				None => return std::path::PathBuf::from("."),
 			}
 		},
-		Err(_e) => return std::path::PathBuf::from("."),
+		Err(_m_error) => return std::path::PathBuf::from("."),
 	}
 }
 
 /// Time from string
 ///
 /// Get given string as time.
-pub fn time_from_string(str: &str) -> Option<chrono::DateTime<chrono::Utc>>
+pub fn time_from_string(a_str: &str) -> Option<chrono::DateTime<chrono::Utc>>
 {
 	use chrono::TimeZone;
-	match chrono::Utc.datetime_from_str(str, "%Y-%m-%d_%H:%M:%S%.f")
+	match chrono::Utc.datetime_from_str(a_str, "%Y-%m-%d_%H:%M:%S%.f")
 	{
-		Ok(dt) => return Some(dt),
-		Err(_e) => return None,
+		Ok(m_dt) => return Some(m_dt),
+		Err(_m_error) => return None,
 	}
 }
 
@@ -41,9 +41,9 @@ pub fn time_now() -> chrono::DateTime<chrono::Utc>
 /// Time to string
 ///
 /// Get given time as string.
-pub fn time_to_string(dt: chrono::DateTime<chrono::Utc>) -> String
+pub fn time_to_string(a_dt: chrono::DateTime<chrono::Utc>) -> String
 {
-	return dt.to_string().replace(" ", "_").replace("_UTC", "");
+	return a_dt.to_string().replace(" ", "_").replace("_UTC", "");
 }
 
 /// Tests module
@@ -61,7 +61,7 @@ mod tests
 			let str = util::time_to_string(util::time_now());
 			match util::time_from_string(str.as_str())
 			{
-				Some(dt) => assert_eq!(str, util::time_to_string(dt).as_str()),
+				Some(m_dt) => assert_eq!(str, util::time_to_string(m_dt).as_str()),
 				None => assert!(false),
 			};
 		}
