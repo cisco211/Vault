@@ -9,141 +9,153 @@ pub struct Config
 	pub name: String,
 
 	/// Tasks
-	pub tasks: toml::Table,
+	pub tasks: std::collections::HashMap<String, Task>,
 }
 
-/// Load
-pub fn load(a_path: &std::path::Path) -> Option<Config>
+/// Config impl
+impl Config
 {
-	let l_path: std::path::PathBuf;
-	if a_path.is_absolute()
+	/// Load
+	pub fn load(a_path: &std::path::Path) -> Option<Config>
 	{
-		l_path = a_path.to_path_buf();
-	}
-	else
-	{
-		l_path = match std::path::PathBuf::new().join(util::path_program()).join(a_path).canonicalize()
+		let l_path: std::path::PathBuf;
+		if a_path.is_absolute()
 		{
-			Ok(m_path) => m_path,
+			l_path = a_path.to_path_buf();
+		}
+		else
+		{
+			l_path = match std::path::PathBuf::new().join(util::path_program()).join(a_path).canonicalize()
+			{
+				Ok(m_path) => m_path,
+				Err(m_error) =>
+				{
+					println!("Error: Failed to canonicalize configuration file '{}'!\n{}", a_path.display(), m_error.to_string());
+					return None;
+				}
+			};
+		}
+		let l_data = match std::fs::read_to_string(l_path)
+		{
+			Ok(m_data) => m_data,
 			Err(m_error) =>
 			{
-				println!("Error: Failed to canonicalize configuration file '{}'!\n{}", a_path.display(), m_error.to_string());
+				println!("Error: Failed to read configuration file '{}'!\n{}", a_path.display(), m_error.to_string());
 				return None;
 			}
 		};
+		match toml::from_str(l_data.as_str())
+		{
+			Ok(m_config) => return Some(m_config),
+			Err(m_error) =>
+			{
+				println!("Error: Failed to parse configuration file '{}'!\n{}", a_path.display(), m_error.to_string());
+				return None;
+			}
+		}
 	}
-	let l_data = match std::fs::read_to_string(l_path)
+
+}
+
+// Task struct
+#[derive(Clone, Debug, serde::Deserialize)]
+#[serde(default)]
+pub struct Task
+{
+	/// Args
+	pub args: std::vec::Vec<String>,
+
+	/// Cmd
+	pub cmd: String,
+
+	/// Enabled
+	pub enabled: bool,
+
+	/// Interval
+	pub interval: i64,
+
+	/// Path
+	pub path: std::path::PathBuf,
+}
+
+/// Task impl
+impl Task
+{
+	/// Get
+	pub fn get(a_cfg: &Config, a_task: &str) -> Option<Task>
 	{
-		Ok(m_data) => m_data,
-		Err(m_error) =>
+		if !a_cfg.tasks.contains_key(a_task)
 		{
-			println!("Error: Failed to read configuration file '{}'!\n{}", a_path.display(), m_error.to_string());
+			println!("Error: {}.{} does not exist!", a_cfg.name, a_task);
 			return None;
 		}
-	};
-	match toml::from_str(l_data.as_str())
-	{
-		Ok(m_config) => return Some(m_config),
-		Err(m_error) =>
+		match a_cfg.tasks.get(a_task)
 		{
-			println!("Error: Failed to parse configuration file '{}'!\n{}", a_path.display(), m_error.to_string());
-			return None;
+			Some(m_task) => Some(m_task.clone()),
+			None => None,
 		}
+	}
+
+	/// Valid
+	pub fn valid(&self, a_cfg: &Config, a_task: &str) -> bool
+	{
+		// Task not enabled
+		if !self.enabled
+		{
+			println!("{}.{} skipped (disabled).\n", a_cfg.name, a_task);
+			return false;
+		}
+
+		// No command
+		if self.cmd.is_empty()
+		{
+			println!("{}.{} skipped (no command).\n", a_cfg.name, a_task);
+			return false;
+		}
+
+		// Negative interval
+		if self.interval < 0
+		{
+			println!("{}.{} skipped (negative interval).\n", a_cfg.name, a_task);
+			return false;
+		}
+
+		// No path
+		match self.path.to_str()
+		{
+			Some(m_path) =>
+			{
+				if m_path.is_empty()
+				{
+					println!("{}.{} skipped (no path).\n", a_cfg.name, a_task);
+					return false;
+				}
+			},
+			None =>
+			{
+				println!("{}.{} skipped (no path).\n", a_cfg.name, a_task);
+				return false;
+			}
+		}
+
+		// Done
+		return true;
 	}
 }
 
-/// Task get
-pub fn task_get(a_cfg: &Config, a_task: &str) -> Option<toml::map::Map<String, toml::Value>>
+/// Default impl for Task
+impl Default for Task
 {
-	if !a_cfg.tasks.contains_key(a_task)
+	/// Default
+	fn default() -> Task
 	{
-		println!("Error: Configuration '{}' task '{}' does not exist!", a_cfg.name, a_task);
-		return None;
-	}
-	match a_cfg.tasks[a_task].as_table()
-	{
-		Some(m_task) => Some(m_task.clone()),
-		None =>
+		Task
 		{
-			println!("Error: Configuration '{}' task '{}' is not readable!", a_cfg.name, a_task);
-			return None;
+			args: std::vec::Vec::new(),
+			cmd: "".to_string(),
+			enabled: false,
+			interval: 0,
+			path: std::path::PathBuf::new()
 		}
 	}
-}
-
-/// Task valid
-pub fn task_valid(a_key: &str, a_value: &toml::map::Map<String, toml::Value>) -> bool
-{
-	// Args not found
-	if !a_value.contains_key("args")
-	{
-		println!("Error: Task '{}' does not have an args array!", a_key);
-		return false;
-	}
-
-	// Args is not array
-	if !a_value["args"].is_array()
-	{
-		println!("Error: Task '{}' args is not an array!", a_key);
-		return false;
-	}
-
-	// Cmd not found
-	if !a_value.contains_key("cmd")
-	{
-		println!("Error: Task '{}' does not have a cmd string!", a_key);
-		return false;
-	}
-
-	// Cmd is not string
-	if !a_value["cmd"].is_str()
-	{
-		println!("Error: Task '{}' cmd is not a string!", a_key);
-		return false;
-	}
-
-	// Enabled not found
-	if !a_value.contains_key("enabled")
-	{
-		println!("Error: Task '{}' does not have a enabled boolean!", a_key);
-		return false;
-	}
-
-	// Enabled is not boolean
-	if !a_value["enabled"].is_bool()
-	{
-		println!("Error: Task '{}' enabled is not a boolean!", a_key);
-		return false;
-	}
-
-	// Interval not found
-	if !a_value.contains_key("interval")
-	{
-		println!("Error: Task '{}' does not have an interval integer!", a_key);
-		return false;
-	}
-
-	// Interval not integer
-	if !a_value["interval"].is_integer()
-	{
-		println!("Error: Task '{}' interval is not an integer!", a_key);
-		return false;
-	}
-
-	// Path not found
-	if !a_value.contains_key("path")
-	{
-		println!("Error: Task '{}' does not have a path string!", a_key);
-		return false;
-	}
-
-	// Path is not string
-	if !a_value["path"].is_str()
-	{
-		println!("Error: Task '{}' path is not a string!", a_key);
-		return false;
-	}
-
-	// Done
-	return true;
 }

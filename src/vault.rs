@@ -37,7 +37,7 @@ pub fn run() -> bool
 	if let Some(l_config) = l_args.config.as_deref()
 	{
 		// Load configuration
-		let l_cfg = match config::load(l_config)
+		let l_cfg = match config::Config::load(l_config)
 		{
 			Some(m_cfg) => m_cfg,
 			None => return false,
@@ -99,19 +99,6 @@ fn task_one(a_cfg: &config::Config, a_task: &str) -> bool
 	// Hail
 	println!("{}.{} checking...", a_cfg.name, a_task);
 
-	// Get task
-	let l_task = match config::task_get(a_cfg, a_task)
-	{
-		Some(m_task) => m_task,
-		None => return false,
-	};
-
-	// Task is not valid
-	if !config::task_valid(a_task, &l_task)
-	{
-		return false;
-	}
-
 	// Do prepare
 	if !task_prepare(a_cfg, a_task)
 	{
@@ -165,39 +152,14 @@ fn task_command(a_cfg: &config::Config, a_task: &str) -> bool
 	println!("{}.{} executing...", a_cfg.name, a_task);
 
 	// Get task
-	let l_task_c = match config::task_get(a_cfg, a_task)
+	let l_task_c = match config::Task::get(a_cfg, a_task)
 	{
 		Some(m_task) => m_task,
 		None => return false,
 	};
 
-	// Get args array
-	let l_task_args = match l_task_c["args"].as_array()
-	{
-		Some(m_value) => m_value,
-		None => return false,
-	};
-
-	// Get cmd string
-	let l_task_cmd = match l_task_c["cmd"].as_str()
-	{
-		Some(m_value) => m_value,
-		None => return false,
-	};
-
-	// Get path string
-	let l_task_path = match l_task_c["path"].as_str()
-	{
-		Some(m_value) => m_value,
-		None => return false,
-	};
-
-	// Get interval integer
-	let l_task_interval = match l_task_c["interval"].as_integer()
-	{
-		Some(m_value) => m_value,
-		None => return false,
-	};
+	let l_task_cmd = l_task_c.cmd.clone();
+	let l_task_path = l_task_c.path.clone();
 
 	// Create command
 	let mut l_cmd = std::process::Command::new(l_task_cmd);
@@ -209,13 +171,9 @@ fn task_command(a_cfg: &config::Config, a_task: &str) -> bool
 	let l_now = util::time_now();
 
 	// Add arguments
-	for i_value in l_task_args
+	for i_value in l_task_c.args
 	{
-		match i_value.as_str()
-		{
-			Some(m_value) => l_cmd.arg(m_value.replace("{NOW}", util::time_to_string(l_now).as_str())),
-			None => continue,
-		};
+		l_cmd.arg(i_value.replace("{NOW}", util::time_to_string(l_now).as_str()));
 	}
 
 	// Execute command
@@ -224,7 +182,7 @@ fn task_command(a_cfg: &config::Config, a_task: &str) -> bool
 		Ok(m_status) => m_status,
 		Err(m_error) =>
 		{
-			println!("Error: Task '{}' failed to execute command '{}'!\n{}", a_task, l_task_cmd, m_error.to_string());
+			println!("Error: Task '{}' failed to execute command '{}'!\n{}", a_task, l_task_c.cmd, m_error.to_string());
 			return false;
 		}
 	};
@@ -232,12 +190,12 @@ fn task_command(a_cfg: &config::Config, a_task: &str) -> bool
 	// Execution failed
 	if !l_status.success()
 	{
-		println!("Error: Task '{}' failed to execute command '{}'!", a_task, l_task_cmd);
+		println!("Error: Task '{}' failed to execute command '{}'!", a_task, l_task_c.cmd);
 		return false;
 	}
 
 	// Get task file path
-	let l_path = std::path::PathBuf::new().join(l_task_path);
+	let l_path = std::path::PathBuf::new().join(l_task_c.path);
 
 	// Load task
 	let mut l_task_t = match task::load(&l_path)
@@ -247,7 +205,7 @@ fn task_command(a_cfg: &config::Config, a_task: &str) -> bool
 	};
 
 	// Update expiration date
-	l_task_t.expires = util::time_to_string(l_now + chrono::Duration::seconds(l_task_interval));
+	l_task_t.expires = util::time_to_string(l_now + chrono::Duration::seconds(l_task_c.interval));
 
 	// Save task
 	if !task::save(&l_path, &l_task_t)
@@ -267,41 +225,26 @@ fn task_prepare(a_cfg: &config::Config, a_task: &str) -> bool
 	println!("{}.{} preparing...", a_cfg.name, a_task);
 
 	// Get config task
-	let l_task_c = match config::task_get(a_cfg, a_task)
+	let l_task_c = match config::Task::get(a_cfg, a_task)
 	{
 		Some(m_task) => m_task,
 		None => return false,
 	};
 
-	// Get enabled boolean
-	let l_enabled = match l_task_c["enabled"].as_bool()
+	// Task not valid
+	if !l_task_c.valid(a_cfg, a_task)
 	{
-		Some(m_enabled) => m_enabled,
-		None => return false,
-	};
-
-	// Task not enabled
-	if !l_enabled
-	{
-		println!("{}.{} skipped (disabled).\n", a_cfg.name, a_task);
 		return false;
 	}
 
-	// Get path string
-	let l_path = match l_task_c["path"].as_str()
-	{
-		Some(m_path) => std::path::PathBuf::new().join(m_path),
-		None => return false,
-	};
-
 	// Create task if not exist
-	if !task::create(&l_path)
+	if !task::create(&l_task_c.path)
 	{
 		return false;
 	}
 
 	// Load task
-	let l_task_t = match task::load(&l_path)
+	let l_task_t = match task::load(&l_task_c.path)
 	{
 		Some(m_task) => m_task,
 		None => return false,
