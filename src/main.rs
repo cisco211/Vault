@@ -145,7 +145,7 @@ fn run_task(config: &Path, task: &str) -> bool
 	println!("Running task '{}' from config '{}'...", task, config.display());
 
 	// TODO: Run the task.
-	return false;
+	false
 }
 
 /// Run tasks
@@ -157,5 +157,5 @@ fn run_tasks(config: &Path) -> bool
 	println!("Running all tasks from config '{}'...", config.display());
 
 	// TODO: Iterate over all tasks and call run_task.
-	return false;
+	false
 }
