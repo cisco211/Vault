@@ -9,10 +9,10 @@ pub fn get_path_program() -> std::path::PathBuf
 		{
 			match path.parent()
 			{
-				Some(parent) => parent.to_path_buf(),
-				_ => std::path::PathBuf::from("."),
+				Some(parent) => return parent.to_path_buf(),
+				None => return std::path::PathBuf::from("."),
 			}
 		},
-		_ => std::path::PathBuf::from("."),
+		Err(_e) => return std::path::PathBuf::from("."),
 	}
 }

@@ -8,11 +8,12 @@ mod util;
 /// Prints the help text to the console.
 fn help(long: bool)
 {
+	println!("");
 	if long
 	{
 		match args::command().print_long_help()
 		{
-			Ok(_) => {},
+			Ok(_) => (),
 			Err(_) => println!("Error: Failed to show long help text!"),
 		}
 	}
@@ -20,7 +21,7 @@ fn help(long: bool)
 	{
 		match args::command().print_help()
 		{
-			Ok(_) => {},
+			Ok(_) => (),
 			Err(_) => println!("Error: Failed to show short help text!"),
 		}
 
@@ -46,62 +47,82 @@ pub fn run() -> bool
 	}
 
 	// Config given
-	if let Some(c) = args.config.as_deref()
+	if let Some(arg_config) = args.config.as_deref()
 	{
-		// Task given
-		if let Some(t) = args.task.as_deref()
+		// Get configuration
+		let cfg : config::Config;
+		match config::get(arg_config)
 		{
-			// All tasks
-			if t.eq("*")
+			Some(c) => cfg = c,
+			None => return false,
+		}
+
+		// No name
+		if cfg.name.is_empty()
+		{
+			println!("Error: Configuration file '{}' has no name!", arg_config.display());
+			return false;
+		}
+
+		// Task given
+		if let Some(arg_task) = args.task.as_deref()
+		{
+			// Empty task
+			if arg_task.is_empty()
 			{
-				tasks(c)
+				println!("Error: Task is empty!");
+				return false;
+			}
+
+			// All tasks
+			if arg_task.eq("*")
+			{
+				println!("Running all tasks from configuration '{}'...", cfg.name);
+				return tasks(cfg);
 			}
 
 			// One specific task
 			else
 			{
-				task(c, t)
+				println!("Running task '{}' from configuration '{}'...", arg_task, cfg.name);
+				return task(cfg, arg_task);
 			}
 		}
 
 		// No task given
 		else
 		{
-			println!("Error: No task specified!\n");
+			println!("Error: No task specified!");
 			help(false);
-			false
+			return false;
 		}
 	}
 
 	// No config given
 	else
 	{
-		println!("Error: No configuration specified!\n");
+		println!("Error: No configuration file specified!");
 		help(false);
-		false
+		return false;
 	}
 }
 
 /// Run task
 ///
 /// Run a task from config.
-fn task(config: &std::path::Path, task: &str) -> bool
+fn task(cfg: config::Config, task: &str) -> bool
 {
-	// Hail
-	println!("Running task '{}' from config '{}'...", task, config.display());
-
 	// TODO: Run the task.
-	false
+	println!("Debug: vault::task\n    {:?}\n    {:?}", cfg, task);
+	return false;
 }
 
 /// Run tasks
 ///
 /// Run all tasks from config.
-fn tasks(config: &std::path::Path) -> bool
+fn tasks(cfg: config::Config) -> bool
 {
-	// Hail
-	println!("Running all tasks from config '{}'...", config.display());
-
 	// TODO: Iterate over all tasks and call run_task.
-	false
+	println!("Debug: vault::tasks\n    {:?}", cfg);
+	return false;
 }

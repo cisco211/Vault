@@ -38,7 +38,7 @@ pub struct Args
 /// Get command.
 pub fn command() -> Command
 {
-	Args::command()
+	return Args::command();
 }
 
 /// Parse
@@ -46,5 +46,5 @@ pub fn command() -> Command
 /// Get parsed args.
 pub fn parse() -> Args
 {
-	Args::parse()
+	return Args::parse();
 }
