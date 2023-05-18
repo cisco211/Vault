@@ -3,9 +3,6 @@ mod args;
 mod config;
 mod util;
 
-// Use
-use clap::{CommandFactory, Parser};
-
 /// Run help
 ///
 /// Prints the help text to the console.
@@ -13,7 +10,7 @@ fn help(long: bool)
 {
 	if long
 	{
-		match args::Args::command().print_long_help()
+		match args::command().print_long_help()
 		{
 			Ok(_) => {},
 			Err(_) => println!("Error: Failed to show long help text!"),
@@ -21,7 +18,7 @@ fn help(long: bool)
 	}
 	else
 	{
-		match args::Args::command().print_help()
+		match args::command().print_help()
 		{
 			Ok(_) => {},
 			Err(_) => println!("Error: Failed to show short help text!"),
@@ -36,7 +33,7 @@ fn help(long: bool)
 pub fn run() -> bool
 {
 	// Get arguments
-	let args = args::Args::parse();
+	let args = args::parse();
 
 	// Debug output
 	if args.debug

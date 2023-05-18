@@ -1,7 +1,12 @@
-/// Data struct
+// Use
+use clap::Command;
+use clap::CommandFactory;
+use clap::Parser;
+
+/// Args struct
 ///
 /// Holding all program arguments.
-#[derive(Debug, Default, clap::Parser)]
+#[derive(Debug, Default, Parser)]
 #[command(about, long_about = None)]
 #[command(help_template = "{about-section}Version: {version}\nAuthor: {author}\n\n{usage-heading} {usage}\n\n{all-args}{tab}")]
 #[command(author)]
@@ -26,4 +31,20 @@ pub struct Args
 	/// * = Do all tasks.
 	#[arg(short, long, value_name = "TASK")]
 	pub task: Option<String>,
+}
+
+/// Command
+///
+/// Get command.
+pub fn command() -> Command
+{
+	Args::command()
+}
+
+/// Parse
+///
+/// Get parsed args.
+pub fn parse() -> Args
+{
+	Args::parse()
 }
