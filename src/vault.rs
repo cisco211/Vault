@@ -63,12 +63,14 @@ pub fn run() -> bool
 			// All tasks
 			if l_task.eq("*")
 			{
+				println!("Vault at {}\n", util::time_to_string(util::time_now()));
 				return task_all(&l_cfg);
 			}
 
 			// One specific task
 			else
 			{
+				println!("Vault at {}\n", util::time_to_string(util::time_now()));
 				return task_one(&l_cfg, l_task);
 			}
 		}
@@ -270,6 +272,20 @@ fn task_prepare(a_cfg: &config::Config, a_task: &str) -> bool
 		Some(m_task) => m_task,
 		None => return false,
 	};
+
+	// Get enabled boolean
+	let l_enabled = match l_task_c["enabled"].as_bool()
+	{
+		Some(m_enabled) => m_enabled,
+		None => return false,
+	};
+
+	// Task not enabled
+	if !l_enabled
+	{
+		println!("{}.{} skipped (disabled).\n", a_cfg.name, a_task);
+		return false;
+	}
 
 	// Get path string
 	let l_path = match l_task_c["path"].as_str()

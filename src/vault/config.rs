@@ -102,6 +102,20 @@ pub fn task_valid(a_key: &str, a_value: &toml::map::Map<String, toml::Value>) ->
 		return false;
 	}
 
+	// Enabled not found
+	if !a_value.contains_key("enabled")
+	{
+		println!("Error: Task '{}' does not have a enabled boolean!", a_key);
+		return false;
+	}
+
+	// Enabled is not boolean
+	if !a_value["enabled"].is_bool()
+	{
+		println!("Error: Task '{}' enabled is not a boolean!", a_key);
+		return false;
+	}
+
 	// Interval not found
 	if !a_value.contains_key("interval")
 	{
