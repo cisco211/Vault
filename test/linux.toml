@@ -1,0 +1,13 @@
+name = "Test"
+
+[tasks.foo]
+cmds = ["echo Time = {NOW}", "echo Second command executed."]
+enabled = true
+interval = 10
+path = "/home/cisco211/vault/test/foo"
+
+[tasks.bar]
+cmds = ["echo Foo Bar Baz", "echo Second command executed."]
+enabled = true
+interval = 10
+path = "/home/cisco211/vault/test/bar"
