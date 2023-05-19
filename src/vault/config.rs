@@ -84,6 +84,16 @@ pub struct Task
 /// Task impl
 impl Task
 {
+	/// Eval
+	pub fn eval(a_cmd: &String, a_path: &str, a_stamp: chrono::DateTime<chrono::Utc>) -> String
+	{
+		return a_cmd
+			.replace("{NOW}", util::Time::to_string(util::Time::now()).as_str())
+			.replace("{PATH}", a_path)
+			.replace("{STAMP}", util::Time::to_string(a_stamp).as_str())
+		;
+	}
+
 	/// Get
 	pub fn get(a_cfg: &Config, a_task: &str) -> Option<Task>
 	{

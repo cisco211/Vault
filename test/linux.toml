@@ -1,7 +1,7 @@
 name = "Test"
 
 [tasks.foo]
-cmds = ["echo Time = {NOW}", "echo Second command executed."]
+cmds = ["echo Time = {STAMP}", "echo Second command executed."]
 enabled = true
 interval = 10
 path = "/home/cisco211/vault/test/foo"

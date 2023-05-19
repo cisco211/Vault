@@ -176,6 +176,9 @@ fn task_command(a_cfg: &config::Config, a_task: &str) -> bool
 		}
 	}
 
+	// Now
+	let mut l_now = util::Time::now();
+
 	// Iterate over commands
 	for i_cmd in l_task.cmds
 	{
@@ -185,14 +188,8 @@ fn task_command(a_cfg: &config::Config, a_task: &str) -> bool
 			continue;
 		}
 
-		// Now
-		let l_now = util::Time::now();
-
-		// Process command
-		let l_str = i_cmd
-			.replace("{NOW}", util::Time::to_string(l_now).as_str())
-			.replace("{PATH}", l_path_s)
-		;
+		// Eval command
+		let l_str = config::Task::eval(&i_cmd, l_path_s, l_now);
 
 		// Split command
 		let l_split = l_str.split(" ").collect::<std::vec::Vec<&str>>();
@@ -244,7 +241,7 @@ fn task_command(a_cfg: &config::Config, a_task: &str) -> bool
 	};
 
 	// Now
-	let l_now = util::Time::now();
+	l_now = util::Time::now();
 
 	// Update expiration date
 	l_state.expires = util::Time::to_string(l_now + chrono::Duration::seconds(l_task.interval));
