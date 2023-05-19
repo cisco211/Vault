@@ -1,7 +1,7 @@
 // Mod
 mod args;
 mod config;
-mod task;
+mod state;
 mod util;
 
 /// Help
@@ -151,23 +151,23 @@ fn task_command(a_cfg: &config::Config, a_task: &str) -> bool
 	println!("{}.{} executing...", a_cfg.name, a_task);
 
 	// Get task
-	let l_task_c = match config::Task::get(a_cfg, a_task)
+	let l_task = match config::Task::get(a_cfg, a_task)
 	{
 		Some(m_task) => m_task,
 		None => return false,
 	};
 
 	// Create command
-	let mut l_cmd = std::process::Command::new(l_task_c.cmd.clone());
+	let mut l_cmd = std::process::Command::new(l_task.cmd.clone());
 
 	// Set working directory
-	l_cmd.current_dir(l_task_c.path.clone());
+	l_cmd.current_dir(l_task.path.clone());
 
 	// Now
 	let l_now = util::Time::now();
 
 	// Add arguments
-	for i_value in l_task_c.args
+	for i_value in l_task.args
 	{
 		l_cmd.arg(i_value.replace("{NOW}", util::Time::to_string(l_now).as_str()));
 	}
@@ -178,7 +178,7 @@ fn task_command(a_cfg: &config::Config, a_task: &str) -> bool
 		Ok(m_status) => m_status,
 		Err(m_error) =>
 		{
-			println!("Error: {}.{} failed to execute command '{}'!\n{}", l_task_c.config, a_task, l_task_c.cmd, m_error.to_string());
+			println!("Error: {}.{} failed to execute command '{}'!\n{}", l_task.config, a_task, l_task.cmd, m_error.to_string());
 			return false;
 		}
 	};
@@ -186,31 +186,31 @@ fn task_command(a_cfg: &config::Config, a_task: &str) -> bool
 	// Execution failed
 	if !l_status.success()
 	{
-		println!("Error: {}.{} failed to execute command '{}'!", l_task_c.config, a_task, l_task_c.cmd);
+		println!("Error: {}.{} failed to execute command '{}'!", l_task.config, a_task, l_task.cmd);
 		return false;
 	}
 
 	// Get task file path
-	let l_path = std::path::PathBuf::new().join(l_task_c.path);
+	let l_path = std::path::PathBuf::new().join(l_task.path);
 
 	// Load task
-	let mut l_task_t = match task::Task::load(&l_path)
+	let mut l_state = match state::State::load(&l_path)
 	{
-		Some(m_task) => m_task,
+		Some(m_state) => m_state,
 		None => return false,
 	};
 
 	// Update expiration date
-	l_task_t.expires = util::Time::to_string(l_now + chrono::Duration::seconds(l_task_c.interval));
+	l_state.expires = util::Time::to_string(l_now + chrono::Duration::seconds(l_task.interval));
 
 	// Save task
-	if !task::Task::save(&l_path, &l_task_t)
+	if !state::State::save(&l_path, &l_state)
 	{
 		return false;
 	}
 
 	// Done
-	println!("{}.{} done (next: {}).\n", a_cfg.name, a_task, l_task_t.expires);
+	println!("{}.{} done (next: {}).\n", a_cfg.name, a_task, l_state.expires);
 	return true;
 }
 
@@ -220,34 +220,34 @@ fn task_prepare(a_cfg: &config::Config, a_task: &str) -> bool
 	// Hail
 	println!("{}.{} preparing...", a_cfg.name, a_task);
 
-	// Get config task
-	let l_task_c = match config::Task::get(a_cfg, a_task)
+	// Get task
+	let l_task = match config::Task::get(a_cfg, a_task)
 	{
 		Some(m_task) => m_task,
 		None => return false,
 	};
 
 	// Task not valid
-	if !l_task_c.valid(a_cfg, a_task)
+	if !l_task.valid(a_cfg, a_task)
 	{
 		return false;
 	}
 
-	// Create task if not exist
-	if !task::Task::create(&l_task_c.path)
+	// Create state if not exist
+	if !state::State::create(&l_task.path)
 	{
 		return false;
 	}
 
-	// Load task
-	let l_task_t = match task::Task::load(&l_task_c.path)
+	// Load state
+	let l_state = match state::State::load(&l_task.path)
 	{
-		Some(m_task) => m_task,
+		Some(m_state) => m_state,
 		None => return false,
 	};
 
 	// Get expiration date
-	let l_expires = match util::Time::from_string(l_task_t.expires.as_str())
+	let l_expires = match util::Time::from_string(l_state.expires.as_str())
 	{
 		Some(m_expires) => m_expires,
 		None => return false,
@@ -256,7 +256,7 @@ fn task_prepare(a_cfg: &config::Config, a_task: &str) -> bool
 	// Not yet expired
 	if util::Time::now() < l_expires
 	{
-		println!("{}.{} skipped (expires: {}).\n", a_cfg.name, a_task, l_task_t.expires);
+		println!("{}.{} skipped (expires: {}).\n", a_cfg.name, a_task, l_state.expires);
 		return false;
 	}
 

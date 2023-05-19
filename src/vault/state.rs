@@ -1,16 +1,16 @@
 // Use
 use crate::vault::util;
 
-/// Task struct
+/// State struct
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
-pub struct Task
+pub struct State
 {
 	/// Expires
 	pub expires : String,
 }
 
-/// Task impl
-impl Task
+/// State impl
+impl State
 {
 	/// Create
 	pub fn create(a_path: &std::path::PathBuf) -> bool
@@ -27,15 +27,15 @@ impl Task
 		}
 
 		// Get path
-		let l_path = Task::path(a_path);
+		let l_path = State::path(a_path);
 
-		// Task file already exists
+		// State file already exists
 		if l_path.exists()
 		{
 			return true;
 		}
 
-		// Create task file
+		// Create state file
 		match std::fs::write(l_path, "")
 		{
 			Ok(_) => {},
@@ -46,21 +46,21 @@ impl Task
 			}
 		}
 
-		// Save task file
-		let l_task = Task
+		// Save state file
+		let l_state = State
 		{
 			expires: util::Time::to_string(util::Time::now()),
 		};
 
 		// Done
-		return Task::save(&a_path, &l_task);
+		return State::save(&a_path, &l_state);
 	}
 
 	/// Load
-	pub fn load(a_path: &std::path::PathBuf) -> Option<Task>
+	pub fn load(a_path: &std::path::PathBuf) -> Option<State>
 	{
 		// Get path
-		let l_path = match Task::path(a_path).canonicalize()
+		let l_path = match State::path(a_path).canonicalize()
 		{
 			Ok(m_path) => m_path,
 			Err(m_error) =>
@@ -81,10 +81,10 @@ impl Task
 			}
 		};
 
-		// Deserialize task
+		// Deserialize state
 		match toml::from_str(l_data.as_str())
 		{
-			Ok(m_task) => return Some(m_task),
+			Ok(m_state) => return Some(m_state),
 			Err(m_error) =>
 			{
 				println!("Error: Failed to parse configuration file '{}'!\n{}", a_path.display(), m_error.to_string());
@@ -96,14 +96,14 @@ impl Task
 	/// Path
 	pub fn path(a_path: &std::path::PathBuf) -> std::path::PathBuf
 	{
-		return std::path::PathBuf::new().join(a_path).join("vault.toml");
+		return std::path::PathBuf::new().join(a_path).join("state.toml");
 	}
 
 	/// Save
-	pub fn save(a_path: &std::path::PathBuf, a_task: &Task) -> bool
+	pub fn save(a_path: &std::path::PathBuf, a_state: &State) -> bool
 	{
 		// Get path
-		let l_path = match Task::path(a_path).canonicalize()
+		let l_path = match State::path(a_path).canonicalize()
 		{
 			Ok(m_path) => m_path,
 			Err(m_error) =>
@@ -113,8 +113,8 @@ impl Task
 			}
 		};
 
-		// Serialize task
-		let l_data = match toml::to_string(&a_task)
+		// Serialize state
+		let l_data = match toml::to_string(&a_state)
 		{
 			Ok(m_data) => m_data,
 			Err(m_error) =>

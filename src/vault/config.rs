@@ -84,7 +84,6 @@ pub struct Task
 	pub task: String,
 }
 
-
 /// Task impl
 impl Task
 {
