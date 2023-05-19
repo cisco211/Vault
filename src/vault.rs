@@ -157,41 +157,84 @@ fn task_command(a_cfg: &config::Config, a_task: &str) -> bool
 		None => return false,
 	};
 
-	// Create command
-	let mut l_cmd = std::process::Command::new(l_task.cmd.clone());
-
-	// Set working directory
-	l_cmd.current_dir(l_task.path.clone());
-
-	// Now
-	let l_now = util::Time::now();
-
-	// Add arguments
-	for i_value in l_task.args
+	// Get task file path
+	let l_path = l_task.path.clone();
+	let l_path_s = match l_path.to_str()
 	{
-		l_cmd.arg(i_value.replace("{NOW}", util::Time::to_string(l_now).as_str()));
-	}
-
-	// Execute command
-	let l_status = match l_cmd.status()
-	{
-		Ok(m_status) => m_status,
-		Err(m_error) =>
-		{
-			println!("Error: {}.{} failed to execute command '{}'!\n{}", l_task.config, a_task, l_task.cmd, m_error.to_string());
-			return false;
-		}
+		Some(m_str) => m_str,
+		None => return false,
 	};
 
-	// Execution failed
-	if !l_status.success()
+	// Failed to change dir
+	match std::env::set_current_dir(l_path.clone())
 	{
-		println!("Error: {}.{} failed to execute command '{}'!", l_task.config, a_task, l_task.cmd);
-		return false;
+		Ok(_) => {},
+		Err(m_error) =>
+		{
+			println!("Error: {}.{} failed to cd into '{}'!\n{}", l_task.config, a_task, l_path_s, m_error.to_string());
+			return false;
+		}
 	}
 
-	// Get task file path
-	let l_path = std::path::PathBuf::new().join(l_task.path);
+	// Iterate over commands
+	for i_cmd in l_task.cmds
+	{
+		// No command
+		if i_cmd.is_empty()
+		{
+			continue;
+		}
+
+		// Now
+		let l_now = util::Time::now();
+
+		// Process command
+		let l_str = i_cmd
+			.replace("{NOW}", util::Time::to_string(l_now).as_str())
+			.replace("{PATH}", l_path_s)
+		;
+
+		// Split command
+		let l_split = l_str.split(" ").collect::<std::vec::Vec<&str>>();
+
+		// No split
+		if l_split.is_empty()
+		{
+			continue;
+		}
+
+		// Create command
+		let mut l_cmd = std::process::Command::new(l_split[0]);
+
+		// Set working directory
+		l_cmd.current_dir(l_task.path.clone());
+
+		// Add arguments
+		for i_index in 1..l_split.len()
+		{
+			let l_str = l_split[i_index]
+				;
+			l_cmd.arg(l_str);
+		}
+
+		// Execute command
+		let l_status = match l_cmd.status()
+		{
+			Ok(m_status) => m_status,
+			Err(m_error) =>
+			{
+				println!("Error: {}.{} failed to execute command '{}'!\n{}", l_task.config, a_task, l_split[0], m_error.to_string());
+				return false;
+			}
+		};
+
+		// Execution failed
+		if !l_status.success()
+		{
+			println!("Error: {}.{} failed to execute command '{}'!", l_task.config, a_task, l_split[0]);
+			return false;
+		}
+	}
 
 	// Load task
 	let mut l_state = match state::State::load(&l_path)
@@ -199,6 +242,9 @@ fn task_command(a_cfg: &config::Config, a_task: &str) -> bool
 		Some(m_state) => m_state,
 		None => return false,
 	};
+
+	// Now
+	let l_now = util::Time::now();
 
 	// Update expiration date
 	l_state.expires = util::Time::to_string(l_now + chrono::Duration::seconds(l_task.interval));

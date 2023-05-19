@@ -62,11 +62,8 @@ impl Config
 #[serde(default)]
 pub struct Task
 {
-	/// Args
-	pub args: std::vec::Vec<String>,
-
-	/// Cmd
-	pub cmd: String,
+	/// Cmds
+	pub cmds: std::vec::Vec<String>,
 
 	/// Config
 	pub config: String,
@@ -119,9 +116,9 @@ impl Task
 		}
 
 		// No command
-		if self.cmd.is_empty()
+		if self.cmds.is_empty()
 		{
-			println!("{}.{} skipped (no command).\n", a_cfg.name, a_task);
+			println!("{}.{} skipped (no commands).\n", a_cfg.name, a_task);
 			return false;
 		}
 
@@ -163,8 +160,7 @@ impl Default for Task
 	{
 		Task
 		{
-			args: std::vec::Vec::new(),
-			cmd: String::new(),
+			cmds: std::vec::Vec::new(),
 			config: String::new(),
 			enabled: false,
 			interval: 0,
