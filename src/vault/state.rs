@@ -2,11 +2,29 @@
 use crate::vault::util;
 
 /// State struct
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+#[serde(default)]
 pub struct State
 {
 	/// Expires
-	pub expires : String,
+	pub expires: String,
+
+	/// Locked
+	pub locked: bool,
+}
+
+/// Default impl for State
+impl Default for State
+{
+	/// Default
+	fn default() -> State
+	{
+		State
+		{
+			expires: util::Time::to_string(util::Time::now()),
+			locked: false,
+		}
+	}
 }
 
 /// State impl
@@ -15,18 +33,22 @@ impl State
 	/// Create
 	pub fn create(a_path: &std::path::PathBuf) -> bool
 	{
-		// Create directory recursively
-		match std::fs::create_dir_all(a_path.to_path_buf())
+		// Path does not exist
+		if !a_path.exists()
 		{
-			Ok(_) => {},
-			Err(m_error) =>
+			// Create directory recursively
+			match std::fs::create_dir_all(a_path.to_path_buf())
 			{
-				println!("Error: Failed to create path '{}'!\n{}", a_path.display(), m_error.to_string());
-				return false;
+				Ok(_) => {},
+				Err(m_error) =>
+				{
+					println!("Error: Failed to create path '{}'!\n{}", a_path.display(), m_error.to_string());
+					return false;
+				}
 			}
 		}
 
-		// Get path
+		// Get state file path
 		let l_path = State::path(a_path);
 
 		// State file already exists
@@ -41,19 +63,13 @@ impl State
 			Ok(_) => {},
 			Err(m_error) =>
 			{
-				println!("Error: Failed to create configuration file '{}'!\n{}", a_path.display(), m_error.to_string());
+				println!("Error: Failed to create state file '{}'!\n{}", a_path.display(), m_error.to_string());
 				return false;
 			}
 		}
 
-		// Save state file
-		let l_state = State
-		{
-			expires: util::Time::to_string(util::Time::now()),
-		};
-
 		// Done
-		return State::save(&a_path, &l_state);
+		return State::save(&a_path, &State::default());
 	}
 
 	/// Load
@@ -65,7 +81,7 @@ impl State
 			Ok(m_path) => m_path,
 			Err(m_error) =>
 			{
-				println!("Error: Failed to canonicalize configuration file '{}'!\n{}", a_path.display(), m_error.to_string());
+				println!("Error: Failed to canonicalize state file '{}'!\n{}", a_path.display(), m_error.to_string());
 				return None;
 			}
 		};
@@ -76,7 +92,7 @@ impl State
 			Ok(m_data) => m_data,
 			Err(m_error) =>
 			{
-				println!("Error: Failed to read configuration file '{}'!\n{}", a_path.display(), m_error.to_string());
+				println!("Error: Failed to read state file '{}'!\n{}", a_path.display(), m_error.to_string());
 				return None;
 			}
 		};
@@ -87,7 +103,7 @@ impl State
 			Ok(m_state) => return Some(m_state),
 			Err(m_error) =>
 			{
-				println!("Error: Failed to parse configuration file '{}'!\n{}", a_path.display(), m_error.to_string());
+				println!("Error: Failed to parse state file '{}'!\n{}", a_path.display(), m_error.to_string());
 				return None;
 			}
 		}
@@ -108,7 +124,7 @@ impl State
 			Ok(m_path) => m_path,
 			Err(m_error) =>
 			{
-				println!("Error: Failed to canonicalize configuration file '{}'!\n{}", a_path.display(), m_error.to_string());
+				println!("Error: Failed to canonicalize state file '{}'!\n{}", a_path.display(), m_error.to_string());
 				return false;
 			}
 		};
@@ -119,7 +135,7 @@ impl State
 			Ok(m_data) => m_data,
 			Err(m_error) =>
 			{
-				println!("Error: Failed to construct configuration file '{}'!\n{}", a_path.display(), m_error.to_string());
+				println!("Error: Failed to construct state file '{}'!\n{}", a_path.display(), m_error.to_string());
 				return false;
 			}
 		};
@@ -130,7 +146,7 @@ impl State
 			Ok(_) => return true,
 			Err(m_error) =>
 			{
-				println!("Error: Failed to write configuration file '{}'!\n{}", a_path.display(), m_error.to_string());
+				println!("Error: Failed to write state file '{}'!\n{}", a_path.display(), m_error.to_string());
 				return false;
 			}
 		}

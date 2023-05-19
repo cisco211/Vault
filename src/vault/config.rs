@@ -77,8 +77,30 @@ pub struct Task
 	/// Path
 	pub path: std::path::PathBuf,
 
+	/// Singleton
+	pub singleton: bool,
+
 	/// Task
 	pub task: String,
+}
+
+/// Default impl for Task
+impl Default for Task
+{
+	/// Default
+	fn default() -> Task
+	{
+		Task
+		{
+			cmds: std::vec::Vec::new(),
+			config: String::new(),
+			enabled: false,
+			interval: 0,
+			path: std::path::PathBuf::new(),
+			singleton: true,
+			task: String::new(),
+		}
+	}
 }
 
 /// Task impl
@@ -159,23 +181,5 @@ impl Task
 
 		// Done
 		return true;
-	}
-}
-
-/// Default impl for Task
-impl Default for Task
-{
-	/// Default
-	fn default() -> Task
-	{
-		Task
-		{
-			cmds: std::vec::Vec::new(),
-			config: String::new(),
-			enabled: false,
-			interval: 0,
-			path: std::path::PathBuf::new(),
-			task: String::new(),
-		}
 	}
 }

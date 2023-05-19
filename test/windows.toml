@@ -5,9 +5,11 @@ cmds = ["cmd /C echo Time = {STAMP}", "cmd /C echo Second command executed."]
 enabled = true
 interval = 10
 path = "E:\\Cisco211\\Repository\\vault\\test\\foo"
+singleton = true
 
 [tasks.bar]
 cmds = ["cmd /C echo Foo Bar Baz", "cmd /C echo Second command executed."]
 enabled = true
 interval = 10
 path = "E:\\Cisco211\\Repository\\vault\\test\\bar"
+singleton = true

@@ -177,7 +177,7 @@ fn task_command(a_cfg: &config::Config, a_task: &str) -> bool
 	}
 
 	// Now
-	let mut l_now = util::Time::now();
+	let l_now = util::Time::now();
 
 	// Iterate over commands
 	for i_cmd in l_task.cmds
@@ -240,11 +240,11 @@ fn task_command(a_cfg: &config::Config, a_task: &str) -> bool
 		None => return false,
 	};
 
-	// Now
-	l_now = util::Time::now();
-
 	// Update expiration date
-	l_state.expires = util::Time::to_string(l_now + chrono::Duration::seconds(l_task.interval));
+	l_state.expires = util::Time::to_string(util::Time::now() + chrono::Duration::seconds(l_task.interval));
+
+	// Unlock
+	l_state.locked = false;
 
 	// Save task
 	if !state::State::save(&l_path, &l_state)
@@ -301,6 +301,28 @@ fn task_prepare(a_cfg: &config::Config, a_task: &str) -> bool
 	{
 		println!("{}.{} skipped (expires: {}).\n", a_cfg.name, a_task, l_state.expires);
 		return false;
+	}
+
+	// Singleton
+	if l_task.singleton
+	{
+		// Already locked
+		if l_state.locked
+		{
+			println!("{}.{} skipped (locked).\n", a_cfg.name, a_task);
+			return false;
+		}
+
+		// Lock
+		else
+		{
+			let mut l_state = l_state.clone();
+			l_state.locked = true;
+			if !state::State::save(&l_task.path, &l_state)
+			{
+				return false;
+			}
+		}
 	}
 
 	// Done
