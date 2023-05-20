@@ -1,24 +1,31 @@
 // Use
-use crate::vault::time;
+use std::collections::HashMap;
+use std::env;
+use std::fs;
+use std::path::{Path, PathBuf};
+use std::vec::Vec;
+use chrono::{DateTime, Utc};
+use serde::Deserialize;
+use crate::vault::time::Time;
 
 // Config struct
-#[derive(Clone, Debug, serde::Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct Config
 {
 	/// Config name
 	pub name: String,
 
 	/// Tasks
-	pub tasks: std::collections::HashMap<String, Task>,
+	pub tasks: HashMap<String, Task>,
 }
 
 /// Config impl
 impl Config
 {
 	/// Load
-	pub fn load(a_path: &std::path::Path) -> Option<Config>
+	pub fn load(a_path: &Path) -> Option<Config>
 	{
-		let l_path: std::path::PathBuf;
+		let l_path: PathBuf;
 		if a_path.is_absolute()
 		{
 			l_path = a_path.to_path_buf();
@@ -35,11 +42,11 @@ impl Config
 		}
 		else
 		{
-			match std::env::current_dir()
+			match env::current_dir()
 			{
 				Ok(m_path) =>
 				{
-					l_path = match std::path::PathBuf::new().join(m_path).join(a_path).canonicalize()
+					l_path = match PathBuf::new().join(m_path).join(a_path).canonicalize()
 					{
 						Ok(m_path) => m_path,
 						Err(m_error) =>
@@ -56,7 +63,7 @@ impl Config
 				},
 			}
 		}
-		let l_data = match std::fs::read_to_string(l_path)
+		let l_data = match fs::read_to_string(l_path)
 		{
 			Ok(m_data) => m_data,
 			Err(m_error) =>
@@ -79,12 +86,12 @@ impl Config
 }
 
 // Task struct
-#[derive(Clone, Debug, serde::Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 #[serde(default)]
 pub struct Task
 {
 	/// Commands
-	pub commands: std::vec::Vec<String>,
+	pub commands: Vec<String>,
 
 	/// Config
 	pub config: String,
@@ -96,7 +103,7 @@ pub struct Task
 	pub interval: i64,
 
 	/// Path
-	pub path: std::path::PathBuf,
+	pub path: PathBuf,
 
 	/// Singleton
 	pub singleton: bool,
@@ -113,11 +120,11 @@ impl Default for Task
 	{
 		Task
 		{
-			commands: std::vec::Vec::new(),
+			commands: Vec::new(),
 			config: String::new(),
 			enabled: false,
 			interval: 0,
-			path: std::path::PathBuf::new(),
+			path: PathBuf::new(),
 			singleton: true,
 			task: String::new(),
 		}
@@ -128,12 +135,12 @@ impl Default for Task
 impl Task
 {
 	/// Eval
-	pub fn eval(a_cmd: &String, a_path: &str, a_stamp: chrono::DateTime<chrono::Utc>) -> String
+	pub fn eval(a_cmd: &String, a_path: &str, a_stamp: DateTime<Utc>) -> String
 	{
 		return a_cmd
-			.replace("{NOW}", time::Time::to_string(time::Time::now()).as_str())
+			.replace("{NOW}", Time::to_string(Time::now()).as_str())
 			.replace("{PATH}", a_path)
-			.replace("{STAMP}", time::Time::to_string(a_stamp).as_str())
+			.replace("{STAMP}", Time::to_string(a_stamp).as_str())
 		;
 	}
 
@@ -200,13 +207,4 @@ impl Task
 		// Done
 		return true;
 	}
-}
-
-/// Tests mod
-mod tests
-{
-	/// Smoke
-	#[test]
-	fn smoke()
-	{}
 }

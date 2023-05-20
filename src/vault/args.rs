@@ -1,6 +1,7 @@
 // Use
 use clap::CommandFactory;
 use clap::Parser;
+use std::path::PathBuf;
 
 /// Args struct
 #[derive(Debug, Default, Parser)]
@@ -14,7 +15,7 @@ pub struct Args
 	///
 	/// Empty = Show help
 	#[arg(short, long, value_name = "FILE")]
-	pub config: Option<std::path::PathBuf>,
+	pub config: Option<PathBuf>,
 
 	/// Task to be executed
 	///
@@ -38,13 +39,4 @@ impl Args
 	{
 		return Args::parse();
 	}
-}
-
-/// Tests mod
-mod tests
-{
-	/// Smoke
-	#[test]
-	fn smoke()
-	{}
 }

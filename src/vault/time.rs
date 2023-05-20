@@ -5,8 +5,7 @@ use chrono::{DateTime, TimeZone, Utc};
 pub const FORMAT: &str = "%Y-%m-%d_%H-%M-%S%.9f";
 
 /// Time struct
-pub struct Time
-{}
+pub struct Time;
 
 /// Time impl
 impl Time
@@ -42,12 +41,13 @@ mod tests
 	#[test]
 	fn smoke()
 	{
+		use crate::vault::time::Time as Time;
 		for _ in 0..1000
 		{
-			let l_str = super::Time::to_string(super::Time::now());
-			match super::Time::from_string(l_str.as_str())
+			let l_str = Time::to_string(Time::now());
+			match Time::from_string(l_str.as_str())
 			{
-				Some(m_dt) => assert_eq!(l_str, super::Time::to_string(m_dt).as_str()),
+				Some(m_dt) => assert_eq!(l_str, Time::to_string(m_dt).as_str()),
 				None => assert!(false),
 			};
 		}

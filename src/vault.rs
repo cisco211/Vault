@@ -4,13 +4,24 @@ mod config;
 mod state;
 mod time;
 
+// Use
+use std::env;
+use std::process::Command;
+use std::vec::Vec;
+use chrono::Duration;
+use crate::vault::args::Args;
+use crate::vault::config::Config;
+use crate::vault::config::Task as ConfigTask;
+use crate::vault::state::State;
+use crate::vault::time::Time;
+
 /// Help
 fn help(a_long: bool)
 {
 	println!("");
 	if a_long
 	{
-		match args::Args::cmd().print_long_help()
+		match Args::cmd().print_long_help()
 		{
 			Ok(_) => (),
 			Err(_) => println!("Error: Failed to show long help text!"),
@@ -18,7 +29,7 @@ fn help(a_long: bool)
 	}
 	else
 	{
-		match args::Args::cmd().print_help()
+		match Args::cmd().print_help()
 		{
 			Ok(_) => (),
 			Err(_) => println!("Error: Failed to show short help text!"),
@@ -30,13 +41,13 @@ fn help(a_long: bool)
 pub fn run() -> bool
 {
 	// Get arguments
-	let l_args = args::Args::read();
+	let l_args = Args::read();
 
 	// Config given
 	if let Some(l_config) = l_args.config.as_deref()
 	{
 		// Load configuration
-		let l_cfg = match config::Config::load(l_config)
+		let l_cfg = match Config::load(l_config)
 		{
 			Some(m_cfg) => m_cfg,
 			None => return false,
@@ -104,7 +115,7 @@ impl Task
 		};
 
 		// Failed to change dir
-		match std::env::set_current_dir(l_path.clone())
+		match env::set_current_dir(l_path.clone())
 		{
 			Ok(_) => {},
 			Err(m_error) =>
@@ -115,7 +126,7 @@ impl Task
 		}
 
 		// Now
-		let l_now = time::Time::now();
+		let l_now = Time::now();
 
 		// Iterate over commands
 		for i_cmd in self.task.commands.iter()
@@ -127,10 +138,10 @@ impl Task
 			}
 
 			// Eval command
-			let l_str = config::Task::eval(&i_cmd, l_path_s, l_now);
+			let l_str = ConfigTask::eval(&i_cmd, l_path_s, l_now);
 
 			// Split command
-			let l_split = l_str.split(" ").collect::<std::vec::Vec<&str>>();
+			let l_split = l_str.split(" ").collect::<Vec<&str>>();
 
 			// No split
 			if l_split.is_empty()
@@ -139,7 +150,7 @@ impl Task
 			}
 
 			// Create command
-			let mut l_cmd = std::process::Command::new(l_split[0]);
+			let mut l_cmd = Command::new(l_split[0]);
 
 			// Set working directory
 			l_cmd.current_dir(l_path.clone());
@@ -180,20 +191,20 @@ impl Task
 	fn finalize(&self) -> bool
 	{
 		// Load state
-		let mut l_state = match state::State::load(&self.task.path)
+		let mut l_state = match State::load(&self.task.path)
 		{
 			Some(m_state) => m_state,
 			None => return false,
 		};
 
 		// Update expiration date
-		l_state.expires = time::Time::to_string(time::Time::now() + chrono::Duration::seconds(self.task.interval));
+		l_state.expires = Time::to_string(Time::now() + Duration::seconds(self.task.interval));
 
 		// Unlock
 		l_state.locked = false;
 
 		// Save task
-		if !state::State::save(&self.task.path, &l_state)
+		if !State::save(&self.task.path, &l_state)
 		{
 			return false;
 		}
@@ -210,7 +221,7 @@ impl Task
 		println!("{}.{} preparing...", self.cfg.name, self.name);
 
 		// Get task
-		self.task = match config::Task::get(&self.cfg, &self.name)
+		self.task = match ConfigTask::get(&self.cfg, &self.name)
 		{
 			Some(m_task) => m_task,
 			None => return false,
@@ -223,20 +234,20 @@ impl Task
 		}
 
 		// Create state if not exist
-		if !state::State::create(&self.task.path)
+		if !State::create(&self.task.path)
 		{
 			return false;
 		}
 
 		// Load state
-		let l_state = match state::State::load(&self.task.path)
+		let l_state = match State::load(&self.task.path)
 		{
 			Some(m_state) => m_state,
 			None => return false,
 		};
 
 		// Get expiration date
-		let l_expires = match time::Time::from_string(l_state.expires.as_str())
+		let l_expires = match Time::from_string(l_state.expires.as_str())
 		{
 			Some(m_expires) => m_expires,
 			None =>
@@ -247,7 +258,7 @@ impl Task
 		};
 
 		// Not yet expired
-		if time::Time::now() < l_expires
+		if Time::now() < l_expires
 		{
 			println!("{}.{} skipped (expires: {}).\n", self.cfg.name, self.name, l_state.expires);
 			return false;
@@ -268,7 +279,7 @@ impl Task
 			{
 				let mut l_state = l_state.clone();
 				l_state.locked = true;
-				if !state::State::save(&self.task.path, &l_state)
+				if !State::save(&self.task.path, &l_state)
 				{
 					return false;
 				}
@@ -297,7 +308,7 @@ impl Task
 		{
 			cfg: a_cfg,
 			name: a_task.to_string(),
-			task: config::Task::default(),
+			task: ConfigTask::default(),
 		};
 
 		// Empty task
@@ -310,14 +321,14 @@ impl Task
 		// All tasks
 		if l_task.name.eq("*")
 		{
-			println!("Vault at {}\n", time::Time::to_string(time::Time::now()));
+			println!("Vault at {}\n", Time::to_string(Time::now()));
 			return l_task.run_all();
 		}
 
 		// One specific task
 		else
 		{
-			println!("Vault at {}\n", time::Time::to_string(time::Time::now()));
+			println!("Vault at {}\n", Time::to_string(Time::now()));
 			return l_task.run_one();
 		}
 	}
@@ -382,13 +393,4 @@ impl Task
 		// Done
 		return true;
 	}
-}
-
-/// Tests mod
-mod tests
-{
-	/// Smoke
-	#[test]
-	fn smoke()
-	{}
 }

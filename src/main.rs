@@ -6,12 +6,3 @@ fn main()
 {
 	vault::run();
 }
-
-/// Tests mod
-mod tests
-{
-	/// Smoke
-	#[test]
-	fn smoke()
-	{}
-}

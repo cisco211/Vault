@@ -1,8 +1,11 @@
 // Use
-use crate::vault::time;
+use std::fs;
+use std::path::PathBuf;
+use serde::{Deserialize, Serialize};
+use crate::vault::time::Time;
 
 /// State struct
-#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(default)]
 pub struct State
 {
@@ -21,7 +24,7 @@ impl Default for State
 	{
 		State
 		{
-			expires: time::Time::to_string(time::Time::now()),
+			expires: Time::to_string(Time::now()),
 			locked: false,
 		}
 	}
@@ -31,13 +34,13 @@ impl Default for State
 impl State
 {
 	/// Create
-	pub fn create(a_path: &std::path::PathBuf) -> bool
+	pub fn create(a_path: &PathBuf) -> bool
 	{
 		// Path does not exist
 		if !a_path.exists()
 		{
 			// Create directory recursively
-			match std::fs::create_dir_all(a_path.to_path_buf())
+			match fs::create_dir_all(a_path.to_path_buf())
 			{
 				Ok(_) => {},
 				Err(m_error) =>
@@ -58,7 +61,7 @@ impl State
 		}
 
 		// Create state file
-		match std::fs::write(l_path, "")
+		match fs::write(l_path, "")
 		{
 			Ok(_) => {},
 			Err(m_error) =>
@@ -73,7 +76,7 @@ impl State
 	}
 
 	/// Load
-	pub fn load(a_path: &std::path::PathBuf) -> Option<State>
+	pub fn load(a_path: &PathBuf) -> Option<State>
 	{
 		// Get path
 		let l_path = match State::path(a_path).canonicalize()
@@ -87,7 +90,7 @@ impl State
 		};
 
 		// Read file
-		let l_data = match std::fs::read_to_string(l_path)
+		let l_data = match fs::read_to_string(l_path)
 		{
 			Ok(m_data) => m_data,
 			Err(m_error) =>
@@ -110,13 +113,13 @@ impl State
 	}
 
 	/// Path
-	pub fn path(a_path: &std::path::PathBuf) -> std::path::PathBuf
+	pub fn path(a_path: &PathBuf) -> PathBuf
 	{
-		return std::path::PathBuf::new().join(a_path).join("state.toml");
+		return PathBuf::new().join(a_path).join("state.toml");
 	}
 
 	/// Save
-	pub fn save(a_path: &std::path::PathBuf, a_state: &State) -> bool
+	pub fn save(a_path: &PathBuf, a_state: &State) -> bool
 	{
 		// Get path
 		let l_path = match State::path(a_path).canonicalize()
@@ -141,7 +144,7 @@ impl State
 		};
 
 		// Write file
-		match std::fs::write(l_path, l_data)
+		match fs::write(l_path, l_data)
 		{
 			Ok(_) => return true,
 			Err(m_error) =>
@@ -151,13 +154,4 @@ impl State
 			}
 		}
 	}
-}
-
-/// Tests mod
-mod tests
-{
-	/// Smoke
-	#[test]
-	fn smoke()
-	{}
 }
