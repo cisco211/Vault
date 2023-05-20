@@ -1,14 +1,14 @@
 name = "test"
 
 [tasks.linux]
-commands = ["touch {STAMP}.txt", "echo {STAMP}.txt written!"]
+commands = ["touch {STAMP}.txt", "echo {STAMP}.txt"]
 enabled = false
 interval = 10
 path = "/home/cisco211/vault/test/linux"
 singleton = true
 
 [tasks.windows]
-commands = ["cmd /C echo {NOW} > {STAMP}.txt", "cmd /C echo {STAMP}.txt written!"]
+commands = ["cmd /C echo {NOW} > {STAMP}.txt", "cmd /C echo {STAMP}.txt"]
 enabled = true
 interval = 10
 path = "E:\\Cisco211\\Repository\\vault\\test\\windows"
