@@ -128,6 +128,9 @@ pub struct ConfigTask
 	/// Path
 	pub path: PathBuf,
 
+	/// Rotate
+	pub rotate: ConfigTaskRotate,
+
 	/// Singleton
 	pub singleton: bool,
 
@@ -148,6 +151,7 @@ impl Default for ConfigTask
 			enabled: false,
 			interval: 0,
 			path: PathBuf::new(),
+			rotate: ConfigTaskRotate::default(),
 			singleton: true,
 			task: String::new(),
 		}
@@ -158,7 +162,7 @@ impl Default for ConfigTask
 impl ConfigTask
 {
 	/// Valid
-	pub fn valid(&self) -> bool
+	pub fn is_valid(&self) -> bool
 	{
 		// Task not enabled
 		if !self.enabled
@@ -194,5 +198,41 @@ impl ConfigTask
 
 		// Done
 		return true;
+	}
+}
+
+/// ConfigTaskRotate struct
+#[derive(Clone, Debug, Deserialize)]
+pub struct ConfigTaskRotate
+{
+	pub daily: bool,
+	pub hourly: bool,
+	pub monthly: bool,
+	pub yearly: bool,
+}
+
+/// Default impl for Task
+impl Default for ConfigTaskRotate
+{
+	/// Default
+	fn default() -> ConfigTaskRotate
+	{
+		ConfigTaskRotate
+		{
+			daily: false,
+			hourly: false,
+			monthly: false,
+			yearly: false,
+		}
+	}
+}
+
+/// ConfigTaskRotate impl
+impl ConfigTaskRotate
+{
+	/// Is valid
+	pub fn is_valid(&self) -> bool
+	{
+		self.daily || self.hourly || self.monthly || self.yearly
 	}
 }

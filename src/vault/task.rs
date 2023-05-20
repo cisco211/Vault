@@ -166,7 +166,7 @@ impl Task
 		};
 
 		// Task not valid
-		if !self.task.valid()
+		if !self.task.is_valid()
 		{
 			return false;
 		}
@@ -231,8 +231,14 @@ impl Task
 	/// Rotate
 	fn rotate(&self) -> bool
 	{
+		// No rotate
+		if !self.task.rotate.is_valid()
+		{
+			return true;
+		}
+
 		// Hail
-		//println!("{}.{} rotating...", self.cfg.name, self.name);
+		println!("{}.{} rotating...", self.cfg.name, self.name);
 
 		// TODO: Implement task_rotate.
 		true
