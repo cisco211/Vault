@@ -2,7 +2,7 @@
 use crate::vault::time;
 
 // Config struct
-#[derive(Debug, serde::Deserialize)]
+#[derive(Clone, Debug, serde::Deserialize)]
 pub struct Config
 {
 	/// Config name
