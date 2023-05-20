@@ -66,7 +66,7 @@ impl Task
 			}
 
 			// Eval command
-			let l_str = Task::eval(&i_cmd, l_path_s, l_now);
+			let l_str = Task::eval(i_cmd.as_str(), l_path_s, &l_now);
 
 			// Split command
 			let l_split = l_str.split(" ").collect::<Vec<&str>>();
@@ -116,10 +116,10 @@ impl Task
 	}
 
 	/// Eval
-	pub fn eval(a_cmd: &String, a_path: &str, a_stamp: DateTime<Utc>) -> String
+	pub fn eval(a_cmd: &str, a_path: &str, a_stamp: &DateTime<Utc>) -> String
 	{
 		return a_cmd
-			.replace(MACRO_NOW, Time::to_string(Time::now()).as_str())
+			.replace(MACRO_NOW, Time::to_string(&Time::now()).as_str())
 			.replace(MACRO_PATH, a_path)
 			.replace(MACRO_STAMP, Time::to_string(a_stamp).as_str())
 		;
@@ -136,7 +136,7 @@ impl Task
 		};
 
 		// Update expiration date
-		l_state.expires = Time::to_string(Time::now() + Duration::seconds(self.task.interval));
+		l_state.expires = Time::to_string(&(Time::now() + Duration::seconds(self.task.interval)));
 
 		// Unlock
 		l_state.locked = false;
@@ -166,7 +166,7 @@ impl Task
 		};
 
 		// Task not valid
-		if !self.task.valid(&self.cfg, &self.name)
+		if !self.task.valid()
 		{
 			return false;
 		}
@@ -239,12 +239,12 @@ impl Task
 	}
 
 	/// Run
-	pub fn run(a_cfg: Config, a_task: &str) -> bool
+	pub fn run(a_cfg: &Config, a_task: &str) -> bool
 	{
 		// Create task
 		let mut l_task = Task
 		{
-			cfg: a_cfg,
+			cfg: (*a_cfg).clone(),
 			name: a_task.to_string(),
 			task: ConfigTask::default(),
 		};

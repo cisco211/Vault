@@ -24,7 +24,7 @@ impl Default for State
 	{
 		State
 		{
-			expires: Time::to_string(Time::now()),
+			expires: Time::to_string(&Time::now()),
 			locked: false,
 		}
 	}

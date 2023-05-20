@@ -27,7 +27,7 @@ impl Time
 	}
 
 	/// To string
-	pub fn to_string(a_dt: DateTime<Utc>) -> String
+	pub fn to_string(a_dt: &DateTime<Utc>) -> String
 	{
 		return a_dt.format(FORMAT).to_string();
 	}
@@ -44,10 +44,10 @@ mod tests
 		use crate::vault::time::Time as Time;
 		for _ in 0..1000
 		{
-			let l_str = Time::to_string(Time::now());
+			let l_str = Time::to_string(&Time::now());
 			match Time::from_string(l_str.as_str())
 			{
-				Some(m_dt) => assert_eq!(l_str, Time::to_string(m_dt).as_str()),
+				Some(m_dt) => assert_eq!(l_str, Time::to_string(&m_dt).as_str()),
 				None => assert!(false),
 			};
 		}

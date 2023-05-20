@@ -40,10 +40,10 @@ pub fn run() -> bool
 	let l_args = Args::read();
 
 	// Config given
-	if let Some(l_config) = l_args.config.as_deref()
+	if let Some(l_config) = l_args.config
 	{
 		// Load configuration
-		let l_cfg = match Config::load(l_config)
+		let l_cfg = match Config::load(&l_config)
 		{
 			Some(m_cfg) => m_cfg,
 			None => return false,
@@ -57,10 +57,10 @@ pub fn run() -> bool
 		}
 
 		// Task given
-		if let Some(l_task) = l_args.task.as_deref()
+		if let Some(l_task) = l_args.task
 		{
-			println!("vault at {}", Time::to_string(Time::now()));
-			let l_status = Task::run(l_cfg, l_task);
+			println!("vault at {}", Time::to_string(&Time::now()));
+			let l_status = Task::run(&l_cfg, l_task.as_str());
 			println!("");
 			return l_status;
 		}

@@ -2,7 +2,7 @@
 use std::collections::HashMap;
 use std::env;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::vec::Vec;
 use serde::Deserialize;
 
@@ -46,7 +46,7 @@ impl Config
 	}
 
 	/// Load
-	pub fn load(a_path: &Path) -> Option<Config>
+	pub fn load(a_path: &PathBuf) -> Option<Config>
 	{
 		let l_path: PathBuf;
 		if a_path.is_absolute()
@@ -158,19 +158,19 @@ impl Default for ConfigTask
 impl ConfigTask
 {
 	/// Valid
-	pub fn valid(&self, a_cfg: &Config, a_task: &str) -> bool
+	pub fn valid(&self) -> bool
 	{
 		// Task not enabled
 		if !self.enabled
 		{
-			println!("{}.{} skipped (disabled).", a_cfg.name, a_task);
+			println!("{}.{} skipped (disabled).", self.config, self.task);
 			return false;
 		}
 
 		// Negative interval
 		if self.interval < 0
 		{
-			println!("{}.{} skipped (negative interval).", a_cfg.name, a_task);
+			println!("{}.{} skipped (negative interval).", self.config, self.task);
 			return false;
 		}
 
@@ -181,13 +181,13 @@ impl ConfigTask
 			{
 				if m_path.is_empty()
 				{
-					println!("{}.{} skipped (no path).", a_cfg.name, a_task);
+					println!("{}.{} skipped (no path).", self.config, self.task);
 					return false;
 				}
 			},
 			None =>
 			{
-				println!("{}.{} skipped (no path).", a_cfg.name, a_task);
+				println!("{}.{} skipped (no path).", self.config, self.task);
 				return false;
 			}
 		}
