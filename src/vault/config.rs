@@ -4,9 +4,7 @@ use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::vec::Vec;
-use chrono::{DateTime, Utc};
 use serde::Deserialize;
-use crate::vault::time::Time;
 
 // Config struct
 #[derive(Clone, Debug, Deserialize)]
@@ -16,12 +14,37 @@ pub struct Config
 	pub name: String,
 
 	/// Tasks
-	pub tasks: HashMap<String, Task>,
+	pub tasks: HashMap<String, ConfigTask>,
 }
 
 /// Config impl
 impl Config
 {
+	/// Get task
+	pub fn get_task(&self, a_task: &str) -> Option<ConfigTask>
+	{
+		if !self.tasks.contains_key(a_task)
+		{
+			println!("Error: {}.{} does not exist!", self.name, a_task);
+			return None;
+		}
+		match self.tasks.get(a_task)
+		{
+			Some(m_task) =>
+			{
+				let mut l_task = m_task.clone();
+				l_task.config = self.name.to_string();
+				l_task.task = a_task.to_string();
+				return Some(l_task);
+			},
+			None =>
+			{
+				println!("Error: {}.{} does not exist!", self.name, a_task);
+				return None;
+			},
+		}
+	}
+
 	/// Load
 	pub fn load(a_path: &Path) -> Option<Config>
 	{
@@ -85,10 +108,10 @@ impl Config
 
 }
 
-// Task struct
+// ConfigTask struct
 #[derive(Clone, Debug, Deserialize)]
 #[serde(default)]
-pub struct Task
+pub struct ConfigTask
 {
 	/// Commands
 	pub commands: Vec<String>,
@@ -113,12 +136,12 @@ pub struct Task
 }
 
 /// Default impl for Task
-impl Default for Task
+impl Default for ConfigTask
 {
 	/// Default
-	fn default() -> Task
+	fn default() -> ConfigTask
 	{
-		Task
+		ConfigTask
 		{
 			commands: Vec::new(),
 			config: String::new(),
@@ -132,57 +155,22 @@ impl Default for Task
 }
 
 /// Task impl
-impl Task
+impl ConfigTask
 {
-	/// Eval
-	pub fn eval(a_cmd: &String, a_path: &str, a_stamp: DateTime<Utc>) -> String
-	{
-		return a_cmd
-			.replace("{NOW}", Time::to_string(Time::now()).as_str())
-			.replace("{PATH}", a_path)
-			.replace("{STAMP}", Time::to_string(a_stamp).as_str())
-		;
-	}
-
-	/// Get
-	pub fn get(a_cfg: &Config, a_task: &str) -> Option<Task>
-	{
-		if !a_cfg.tasks.contains_key(a_task)
-		{
-			println!("Error: {}.{} does not exist!", a_cfg.name, a_task);
-			return None;
-		}
-		match a_cfg.tasks.get(a_task)
-		{
-			Some(m_task) =>
-			{
-				let mut l_task = m_task.clone();
-				l_task.config = a_cfg.name.to_string();
-				l_task.task = a_task.to_string();
-				return Some(l_task);
-			},
-			None =>
-			{
-				println!("Error: {}.{} does not exist!", a_cfg.name, a_task);
-				return None;
-			},
-		}
-	}
-
 	/// Valid
 	pub fn valid(&self, a_cfg: &Config, a_task: &str) -> bool
 	{
 		// Task not enabled
 		if !self.enabled
 		{
-			println!("{}.{} skipped (disabled).\n", a_cfg.name, a_task);
+			println!("{}.{} skipped (disabled).", a_cfg.name, a_task);
 			return false;
 		}
 
 		// Negative interval
 		if self.interval < 0
 		{
-			println!("{}.{} skipped (negative interval).\n", a_cfg.name, a_task);
+			println!("{}.{} skipped (negative interval).", a_cfg.name, a_task);
 			return false;
 		}
 
@@ -193,13 +181,13 @@ impl Task
 			{
 				if m_path.is_empty()
 				{
-					println!("{}.{} skipped (no path).\n", a_cfg.name, a_task);
+					println!("{}.{} skipped (no path).", a_cfg.name, a_task);
 					return false;
 				}
 			},
 			None =>
 			{
-				println!("{}.{} skipped (no path).\n", a_cfg.name, a_task);
+				println!("{}.{} skipped (no path).", a_cfg.name, a_task);
 				return false;
 			}
 		}

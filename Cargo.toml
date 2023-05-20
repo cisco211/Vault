@@ -1,6 +1,6 @@
 [package]
 authors = ["cisco211 <TjSBMD1810@yahoo.de>"]
-description = "Vault = A task based backup manager."
+description = "vault = A task based backup manager."
 edition = "2021"
 name = "vault"
 version = "0.1.0"

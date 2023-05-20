@@ -9,6 +9,7 @@ mod time;
 use crate::vault::args::Args;
 use crate::vault::config::Config;
 use crate::vault::task::Task;
+use crate::vault::time::Time;
 
 /// Help
 fn help(a_long: bool)
@@ -58,7 +59,10 @@ pub fn run() -> bool
 		// Task given
 		if let Some(l_task) = l_args.task.as_deref()
 		{
-			return Task::run(l_cfg, l_task);
+			println!("vault at {}", Time::to_string(Time::now()));
+			let l_status = Task::run(l_cfg, l_task);
+			println!("");
+			return l_status;
 		}
 
 		// No task given

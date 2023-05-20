@@ -2,11 +2,15 @@
 use std::env;
 use std::process::Command;
 use std::vec::Vec;
-use chrono::Duration;
-use crate::vault::config::Config;
-use crate::vault::config::Task as ConfigTask;
+use chrono::{DateTime, Duration, Utc};
+use crate::vault::config::{Config, ConfigTask};
 use crate::vault::state::State;
 use crate::vault::time::Time;
+
+/// Macros
+pub const MACRO_NOW: &str = "{NOW}";
+pub const MACRO_PATH: &str = "{PATH}";
+pub const MACRO_STAMP: &str = "{STAMP}";
 
 /// Task struct
 pub struct Task
@@ -62,7 +66,7 @@ impl Task
 			}
 
 			// Eval command
-			let l_str = ConfigTask::eval(&i_cmd, l_path_s, l_now);
+			let l_str = Task::eval(&i_cmd, l_path_s, l_now);
 
 			// Split command
 			let l_split = l_str.split(" ").collect::<Vec<&str>>();
@@ -111,6 +115,16 @@ impl Task
 		return true;
 	}
 
+	/// Eval
+	pub fn eval(a_cmd: &String, a_path: &str, a_stamp: DateTime<Utc>) -> String
+	{
+		return a_cmd
+			.replace(MACRO_NOW, Time::to_string(Time::now()).as_str())
+			.replace(MACRO_PATH, a_path)
+			.replace(MACRO_STAMP, Time::to_string(a_stamp).as_str())
+		;
+	}
+
 	/// Finalize
 	fn finalize(&self) -> bool
 	{
@@ -134,7 +148,7 @@ impl Task
 		}
 
 		// Done
-		println!("{}.{} done (next: {}).\n", self.cfg.name, self.name, l_state.expires);
+		println!("{}.{} done (next: {}).", self.cfg.name, self.name, l_state.expires);
 		return true;
 	}
 
@@ -145,7 +159,7 @@ impl Task
 		println!("{}.{} preparing...", self.cfg.name, self.name);
 
 		// Get task
-		self.task = match ConfigTask::get(&self.cfg, &self.name)
+		self.task = match self.cfg.get_task(&self.name)
 		{
 			Some(m_task) => m_task,
 			None => return false,
@@ -176,7 +190,7 @@ impl Task
 			Some(m_expires) => m_expires,
 			None =>
 			{
-				println!("{}.{} skipped (invalid: {}).\n", self.cfg.name, self.name, l_state.expires);
+				println!("{}.{} skipped (invalid: {}).", self.cfg.name, self.name, l_state.expires);
 				return false;
 			},
 		};
@@ -184,7 +198,7 @@ impl Task
 		// Not yet expired
 		if Time::now() < l_expires
 		{
-			println!("{}.{} skipped (expires: {}).\n", self.cfg.name, self.name, l_state.expires);
+			println!("{}.{} skipped (expires: {}).", self.cfg.name, self.name, l_state.expires);
 			return false;
 		}
 
@@ -194,7 +208,7 @@ impl Task
 			// Already locked
 			if l_state.locked
 			{
-				println!("{}.{} skipped (locked).\n", self.cfg.name, self.name);
+				println!("{}.{} skipped (locked).", self.cfg.name, self.name);
 				return false;
 			}
 
@@ -245,14 +259,12 @@ impl Task
 		// All tasks
 		if l_task.name.eq("*")
 		{
-			println!("Vault at {}\n", Time::to_string(Time::now()));
 			return l_task.run_all();
 		}
 
 		// One specific task
 		else
 		{
-			println!("Vault at {}\n", Time::to_string(Time::now()));
 			return l_task.run_one();
 		}
 	}
@@ -262,7 +274,6 @@ impl Task
 	{
 		// Hail
 		println!("{}.* checking...", self.cfg.name);
-		println!("");
 
 		// Status bool
 		let mut l_status = true;
