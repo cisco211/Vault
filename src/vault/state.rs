@@ -1,5 +1,5 @@
 // Use
-use crate::vault::util;
+use crate::vault::time;
 
 /// State struct
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
@@ -21,7 +21,7 @@ impl Default for State
 	{
 		State
 		{
-			expires: util::Time::to_string(util::Time::now()),
+			expires: time::Time::to_string(time::Time::now()),
 			locked: false,
 		}
 	}

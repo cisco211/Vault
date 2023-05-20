@@ -9,7 +9,7 @@ impl Time
 	pub fn from_string(a_str: &str) -> Option<chrono::DateTime<chrono::Utc>>
 	{
 		use chrono::TimeZone;
-		match chrono::Utc.datetime_from_str(a_str, "%Y-%m-%d.%H-%M-%S%.f")
+		match chrono::Utc.datetime_from_str(a_str, "%Y-%m-%d_%H-%M-%S_%f")
 		{
 			Ok(m_dt) => return Some(m_dt),
 			Err(_m_error) => return None,
@@ -25,7 +25,12 @@ impl Time
 	/// To string
 	pub fn to_string(a_dt: chrono::DateTime<chrono::Utc>) -> String
 	{
-		return a_dt.to_string().replace(" ", ".").replace(":", "-").replace(".UTC", "");
+		return a_dt.to_string()
+			.replace(" ", "_")
+			.replace(".", "_")
+			.replace(":", "-")
+			.replace("_UTC", "")
+		;
 	}
 
 }

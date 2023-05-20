@@ -2,7 +2,7 @@
 mod args;
 mod config;
 mod state;
-mod util;
+mod time;
 
 /// Help
 fn help(a_long: bool)
@@ -62,14 +62,14 @@ pub fn run() -> bool
 			// All tasks
 			if l_task.eq("*")
 			{
-				println!("Vault at {}\n", util::Time::to_string(util::Time::now()));
+				println!("Vault at {}\n", time::Time::to_string(time::Time::now()));
 				return task_all(&l_cfg);
 			}
 
 			// One specific task
 			else
 			{
-				println!("Vault at {}\n", util::Time::to_string(util::Time::now()));
+				println!("Vault at {}\n", time::Time::to_string(time::Time::now()));
 				return task_one(&l_cfg, l_task);
 			}
 		}
@@ -178,7 +178,7 @@ fn task_command(a_cfg: &config::Config, a_task: &str) -> bool
 	}
 
 	// Now
-	let l_now = util::Time::now();
+	let l_now = time::Time::now();
 
 	// Iterate over commands
 	for i_cmd in l_task.commands
@@ -242,7 +242,7 @@ fn task_command(a_cfg: &config::Config, a_task: &str) -> bool
 	};
 
 	// Update expiration date
-	l_state.expires = util::Time::to_string(util::Time::now() + chrono::Duration::seconds(l_task.interval));
+	l_state.expires = time::Time::to_string(time::Time::now() + chrono::Duration::seconds(l_task.interval));
 
 	// Unlock
 	l_state.locked = false;
@@ -291,14 +291,14 @@ fn task_prepare(a_cfg: &config::Config, a_task: &str) -> bool
 	};
 
 	// Get expiration date
-	let l_expires = match util::Time::from_string(l_state.expires.as_str())
+	let l_expires = match time::Time::from_string(l_state.expires.as_str())
 	{
 		Some(m_expires) => m_expires,
 		None => return false,
 	};
 
 	// Not yet expired
-	if util::Time::now() < l_expires
+	if time::Time::now() < l_expires
 	{
 		println!("{}.{} skipped (expires: {}).\n", a_cfg.name, a_task, l_state.expires);
 		return false;

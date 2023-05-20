@@ -1,5 +1,5 @@
 // Use
-use crate::vault::util;
+use crate::vault::time;
 
 // Config struct
 #[derive(Debug, serde::Deserialize)]
@@ -131,9 +131,9 @@ impl Task
 	pub fn eval(a_cmd: &String, a_path: &str, a_stamp: chrono::DateTime<chrono::Utc>) -> String
 	{
 		return a_cmd
-			.replace("{NOW}", util::Time::to_string(util::Time::now()).as_str())
+			.replace("{NOW}", time::Time::to_string(time::Time::now()).as_str())
 			.replace("{PATH}", a_path)
-			.replace("{STAMP}", util::Time::to_string(a_stamp).as_str())
+			.replace("{STAMP}", time::Time::to_string(a_stamp).as_str())
 		;
 	}
 
