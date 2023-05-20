@@ -17,7 +17,7 @@ pub struct Args
 	#[arg(short, long, value_name = "FILE")]
 	pub config: Option<PathBuf>,
 
-	/// Debug
+	/// Debug flag
 	///
 	/// Display debug data.
 	#[arg(short, long, default_value_t  = false)]
