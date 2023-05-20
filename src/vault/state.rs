@@ -152,3 +152,12 @@ impl State
 		}
 	}
 }
+
+/// Tests mod
+mod tests
+{
+	/// Smoke
+	#[test]
+	fn smoke()
+	{}
+}

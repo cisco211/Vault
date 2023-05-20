@@ -201,3 +201,12 @@ impl Task
 		return true;
 	}
 }
+
+/// Tests mod
+mod tests
+{
+	/// Smoke
+	#[test]
+	fn smoke()
+	{}
+}

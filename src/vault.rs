@@ -339,3 +339,12 @@ fn task_rotation(a_cfg: &config::Config, a_task: &str) -> bool
 	// TODO: Implement do_rotation.
 	true
 }
+
+/// Tests mod
+mod tests
+{
+	/// Smoke
+	#[test]
+	fn smoke()
+	{}
+}

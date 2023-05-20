@@ -1,3 +1,9 @@
+// Use
+use chrono::{DateTime, TimeZone, Utc};
+
+/// Format
+pub const FORMAT: &str = "%Y-%m-%d_%H-%M-%S%.9f";
+
 /// Time struct
 pub struct Time
 {}
@@ -6,10 +12,9 @@ pub struct Time
 impl Time
 {
 	/// from string
-	pub fn from_string(a_str: &str) -> Option<chrono::DateTime<chrono::Utc>>
+	pub fn from_string(a_str: &str) -> Option<DateTime<Utc>>
 	{
-		use chrono::TimeZone;
-		match chrono::Utc.datetime_from_str(a_str, "%Y-%m-%d_%H-%M-%S_%f")
+		match Utc.datetime_from_str(a_str, FORMAT)
 		{
 			Ok(m_dt) => return Some(m_dt),
 			Err(_m_error) => return None,
@@ -17,30 +22,25 @@ impl Time
 	}
 
 	/// Now
-	pub fn now() -> chrono::DateTime<chrono::Utc>
+	pub fn now() -> DateTime<Utc>
 	{
-		return chrono::offset::Utc::now();
+		return Utc::now();
 	}
 
 	/// To string
-	pub fn to_string(a_dt: chrono::DateTime<chrono::Utc>) -> String
+	pub fn to_string(a_dt: DateTime<Utc>) -> String
 	{
-		return a_dt.to_string()
-			.replace(" ", "_")
-			.replace(".", "_")
-			.replace(":", "-")
-			.replace("_UTC", "")
-		;
+		return a_dt.format(FORMAT).to_string();
 	}
 
 }
 
-/// Tests module
+/// Tests mod
 mod tests
 {
-	/// Smoke time
+	/// Smoke
 	#[test]
-	fn smoke_time()
+	fn smoke()
 	{
 		for _ in 0..1000
 		{

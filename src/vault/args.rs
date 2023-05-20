@@ -39,3 +39,12 @@ impl Args
 		return Args::parse();
 	}
 }
+
+/// Tests mod
+mod tests
+{
+	/// Smoke
+	#[test]
+	fn smoke()
+	{}
+}
