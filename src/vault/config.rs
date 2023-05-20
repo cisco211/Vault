@@ -8,13 +8,32 @@ use serde::Deserialize;
 
 // Config struct
 #[derive(Clone, Debug, Deserialize)]
+#[serde(default)]
 pub struct Config
 {
-	/// Config name
+	/// Debug
+	pub debug: bool,
+
+	/// Name
 	pub name: String,
 
 	/// Tasks
 	pub tasks: HashMap<String, ConfigTask>,
+}
+
+/// Default impl for Config
+impl Default for Config
+{
+	/// Default
+	fn default() -> Config
+	{
+		Config
+		{
+			debug: false,
+			name: String::new(),
+			tasks: HashMap::new(),
+		}
+	}
 }
 
 /// Config impl
@@ -138,7 +157,7 @@ pub struct ConfigTask
 	pub task: String,
 }
 
-/// Default impl for Task
+/// Default impl for ConfigTask
 impl Default for ConfigTask
 {
 	/// Default
@@ -203,15 +222,23 @@ impl ConfigTask
 
 /// ConfigTaskRotate struct
 #[derive(Clone, Debug, Deserialize)]
+#[serde(default)]
 pub struct ConfigTaskRotate
 {
+	/// Daily
 	pub daily: bool,
+
+	/// Hourly
 	pub hourly: bool,
+
+	/// Monthly
 	pub monthly: bool,
+
+	/// Yearly
 	pub yearly: bool,
 }
 
-/// Default impl for Task
+/// Default impl for ConfigTaskRotate
 impl Default for ConfigTaskRotate
 {
 	/// Default

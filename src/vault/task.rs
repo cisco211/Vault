@@ -141,6 +141,12 @@ impl Task
 		// Unlock
 		l_state.locked = false;
 
+		// Debug
+		if self.cfg.debug
+		{
+			dbg!(&l_state);
+		}
+
 		// Save task
 		if !State::save(&self.task.path, &l_state)
 		{
@@ -183,6 +189,12 @@ impl Task
 			Some(m_state) => m_state,
 			None => return false,
 		};
+
+		// Debug
+		if self.cfg.debug
+		{
+			dbg!(&l_state);
+		}
 
 		// Get expiration date
 		let l_expires = match Time::from_string(l_state.expires.as_str())

@@ -13,9 +13,15 @@ pub struct Args
 {
 	/// Config file
 	///
-	/// Empty = Show help
+	/// Empty = Show help.
 	#[arg(short, long, value_name = "FILE")]
 	pub config: Option<PathBuf>,
+
+	/// Debug
+	///
+	/// Display debug data.
+	#[arg(short, long, default_value_t  = false)]
+	pub debug: bool,
 
 	/// Task to be executed
 	///

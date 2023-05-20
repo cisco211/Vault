@@ -43,11 +43,18 @@ pub fn run() -> bool
 	if let Some(l_config) = l_args.config
 	{
 		// Load configuration
-		let l_cfg = match Config::load(&l_config)
+		let mut l_cfg = match Config::load(&l_config)
 		{
 			Some(m_cfg) => m_cfg,
 			None => return false,
 		};
+
+		// Debug
+		l_cfg.debug = l_args.debug;
+		if l_args.debug
+		{
+			dbg!(&l_cfg);
+		}
 
 		// No name
 		if l_cfg.name.is_empty()
