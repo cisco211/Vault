@@ -164,6 +164,7 @@ fn task_command(a_cfg: &config::Config, a_task: &str) -> bool
 		Some(m_str) => m_str,
 		None => return false,
 	};
+	println!("{}.{} cwd: {}", l_task.config, a_task, l_path_s);
 
 	// Failed to change dir
 	match std::env::set_current_dir(l_path.clone())
@@ -204,7 +205,7 @@ fn task_command(a_cfg: &config::Config, a_task: &str) -> bool
 		let mut l_cmd = std::process::Command::new(l_split[0]);
 
 		// Set working directory
-		l_cmd.current_dir(l_task.path.clone());
+		l_cmd.current_dir(l_path.clone());
 
 		// Add arguments
 		for i_index in 1..l_split.len()

@@ -131,9 +131,13 @@ impl Task
 				let mut l_task = m_task.clone();
 				l_task.config = a_cfg.name.to_string();
 				l_task.task = a_task.to_string();
-				Some(l_task)
+				return Some(l_task);
 			},
-			None => None,
+			None =>
+			{
+				println!("Error: {}.{} does not exist!", a_cfg.name, a_task);
+				return None;
+			},
 		}
 	}
 

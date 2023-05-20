@@ -1,15 +1,15 @@
 name = "Test"
 
-[tasks.foo]
-commands = ["echo Time = {STAMP}", "echo Second command executed."]
+[tasks.linux]
+commands = ["touch {STAMP}.txt", "echo {STAMP}.txt written!"]
 enabled = true
 interval = 10
-path = "/home/cisco211/vault/test/foo"
+path = "/home/cisco211/vault/test/linux"
 singleton = true
 
-[tasks.bar]
-commands = ["echo Foo Bar Baz", "echo Second command executed."]
-enabled = true
+[tasks.windows]
+commands = ["cmd /C echo {NOW} > {STAMP}.txt", "cmd /C echo {STAMP}.txt written!"]
+enabled = false
 interval = 10
-path = "/home/cisco211/vault/test/bar"
+path = "E:\\Cisco211\\Repository\\vault\\test\\windows"
 singleton = true
