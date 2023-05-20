@@ -95,23 +95,26 @@ pub fn run() -> bool
 /// Task one
 fn task_one(a_cfg: &config::Config, a_task: &str) -> bool
 {
-	// Hail
-	println!("{}.{} checking...", a_cfg.name, a_task);
-
-	// Do prepare
+	// Prepare
 	if !task_prepare(a_cfg, a_task)
 	{
 		return false;
 	}
 
-	// Do rotation
-	if !task_rotation(a_cfg, a_task)
+	// Command
+	if !task_command(a_cfg, a_task)
 	{
-		return false;
+		return task_finalize(a_cfg, a_task);
 	}
 
-	// Do command
-	if !task_command(a_cfg, a_task)
+	// Rotate
+	if !task_rotate(a_cfg, a_task)
+	{
+		return task_finalize(a_cfg, a_task);
+	}
+
+	// Finalize
+	if !task_finalize(a_cfg, a_task)
 	{
 		return false;
 	}
@@ -164,7 +167,6 @@ fn task_command(a_cfg: &config::Config, a_task: &str) -> bool
 		Some(m_str) => m_str,
 		None => return false,
 	};
-	println!("{}.{} cwd: {}", l_task.config, a_task, l_path_s);
 
 	// Failed to change dir
 	match std::env::set_current_dir(l_path.clone())
@@ -234,8 +236,23 @@ fn task_command(a_cfg: &config::Config, a_task: &str) -> bool
 		}
 	}
 
+	// Done
+	println!("{}.{} executed.", a_cfg.name, a_task);
+	return true;
+}
+
+/// Task finalize
+fn task_finalize(a_cfg: &config::Config, a_task: &str) -> bool
+{
+	// Get task
+	let l_task = match config::Task::get(a_cfg, a_task)
+	{
+		Some(m_task) => m_task,
+		None => return false,
+	};
+
 	// Load task
-	let mut l_state = match state::State::load(&l_path)
+	let mut l_state = match state::State::load(&l_task.path)
 	{
 		Some(m_state) => m_state,
 		None => return false,
@@ -248,7 +265,7 @@ fn task_command(a_cfg: &config::Config, a_task: &str) -> bool
 	l_state.locked = false;
 
 	// Save task
-	if !state::State::save(&l_path, &l_state)
+	if !state::State::save(&l_task.path, &l_state)
 	{
 		return false;
 	}
@@ -294,7 +311,11 @@ fn task_prepare(a_cfg: &config::Config, a_task: &str) -> bool
 	let l_expires = match time::Time::from_string(l_state.expires.as_str())
 	{
 		Some(m_expires) => m_expires,
-		None => return false,
+		None =>
+		{
+			println!("{}.{} skipped (invalid: {}).\n", a_cfg.name, a_task, l_state.expires);
+			return false;
+		},
 	};
 
 	// Not yet expired
@@ -330,13 +351,13 @@ fn task_prepare(a_cfg: &config::Config, a_task: &str) -> bool
 	return true;
 }
 
-/// Task rotation
-fn task_rotation(a_cfg: &config::Config, a_task: &str) -> bool
+/// Task rotate
+fn task_rotate(_a_cfg: &config::Config, _a_task: &str) -> bool
 {
 	// Hail
-	println!("{}.{} rotating...", a_cfg.name, a_task);
+	//println!("{}.{} rotating...", a_cfg.name, a_task);
 
-	// TODO: Implement do_rotation.
+	// TODO: Implement task_rotate.
 	true
 }
 
