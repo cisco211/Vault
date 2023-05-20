@@ -1,14 +1,14 @@
 name = "Test"
 
 [tasks.foo]
-cmds = ["echo Time = {STAMP}", "echo Second command executed."]
+commands = ["echo Time = {STAMP}", "echo Second command executed."]
 enabled = true
 interval = 10
 path = "/home/cisco211/vault/test/foo"
 singleton = true
 
 [tasks.bar]
-cmds = ["echo Foo Bar Baz", "echo Second command executed."]
+commands = ["echo Foo Bar Baz", "echo Second command executed."]
 enabled = true
 interval = 10
 path = "/home/cisco211/vault/test/bar"

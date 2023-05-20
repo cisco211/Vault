@@ -180,7 +180,7 @@ fn task_command(a_cfg: &config::Config, a_task: &str) -> bool
 	let l_now = util::Time::now();
 
 	// Iterate over commands
-	for i_cmd in l_task.cmds
+	for i_cmd in l_task.commands
 	{
 		// No command
 		if i_cmd.is_empty()
