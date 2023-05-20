@@ -22,18 +22,39 @@ impl Config
 		if a_path.is_absolute()
 		{
 			l_path = a_path.to_path_buf();
+			if !l_path.exists()
+			{
+				println!("Error: Configuration file '{}' does not exist!", a_path.display());
+				return None;
+			}
+			if !l_path.is_file()
+			{
+				println!("Error: Configuration file '{}' is not a file!", a_path.display());
+				return None;
+			}
 		}
 		else
 		{
-			l_path = match std::path::PathBuf::new().join(util::Path::program()).join(a_path).canonicalize()
+			match std::env::current_dir()
 			{
-				Ok(m_path) => m_path,
+				Ok(m_path) =>
+				{
+					l_path = match std::path::PathBuf::new().join(m_path).join(a_path).canonicalize()
+					{
+						Ok(m_path) => m_path,
+						Err(m_error) =>
+						{
+							println!("Error: Failed to canonicalize configuration file '{}'!\n{}", a_path.display(), m_error.to_string());
+							return None;
+						}
+					};
+				},
 				Err(m_error) =>
 				{
-					println!("Error: Failed to canonicalize configuration file '{}'!\n{}", a_path.display(), m_error.to_string());
+					println!("Error: Failed to get current directory for configuration file '{}'!\n{}", a_path.display(), m_error.to_string());
 					return None;
-				}
-			};
+				},
+			}
 		}
 		let l_data = match std::fs::read_to_string(l_path)
 		{

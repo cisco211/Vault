@@ -1,4 +1,4 @@
-name = "Test"
+name = "test"
 
 [tasks.linux]
 commands = ["touch {STAMP}.txt", "echo {STAMP}.txt written!"]
