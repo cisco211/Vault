@@ -5,6 +5,7 @@ commands = ["touch {STAMP}.txt", "echo {STAMP}.txt"]
 enabled = false
 interval = 10
 path = "/home/cisco211/vault/test/linux"
+rotate = {daily = true, hourly = true, monthly = true, yearly = true}
 singleton = true
 
 [tasks.windows]
@@ -12,4 +13,5 @@ commands = ["cmd /C echo {NOW} > {STAMP}.txt", "cmd /C echo {STAMP}.txt"]
 enabled = true
 interval = 10
 path = "E:\\Cisco211\\Repository\\vault\\test\\windows"
+rotate = {daily = true, hourly = true, monthly = true, yearly = true}
 singleton = true

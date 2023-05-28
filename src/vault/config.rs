@@ -150,6 +150,9 @@ pub struct ConfigTask
 	/// Rotate
 	pub rotate: ConfigTaskRotate,
 
+	/// Rotate strategy
+	pub rotate_strategy: String,
+
 	/// Singleton
 	pub singleton: bool,
 
@@ -171,6 +174,7 @@ impl Default for ConfigTask
 			interval: 0,
 			path: PathBuf::new(),
 			rotate: ConfigTaskRotate::default(),
+			rotate_strategy: String::from("move"),
 			singleton: true,
 			task: String::new(),
 		}

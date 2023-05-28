@@ -1,6 +1,7 @@
 // Mod
 mod args;
 mod config;
+mod rotate;
 mod state;
 mod task;
 mod time;

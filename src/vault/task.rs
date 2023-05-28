@@ -4,6 +4,7 @@ use std::process::Command;
 use std::vec::Vec;
 use chrono::{DateTime, Duration, Utc};
 use crate::vault::config::{Config, ConfigTask};
+use crate::vault::rotate::Rotate;
 use crate::vault::state::State;
 use crate::vault::time::Time;
 
@@ -13,6 +14,7 @@ pub const MACRO_PATH: &str = "{PATH}";
 pub const MACRO_STAMP: &str = "{STAMP}";
 
 /// Task struct
+#[derive(Clone)]
 pub struct Task
 {
 	/// Cfg
@@ -22,7 +24,7 @@ pub struct Task
 	name: String,
 
 	/// Task
-	task: ConfigTask,
+	pub task: ConfigTask,
 }
 
 /// Task impl
@@ -252,8 +254,11 @@ impl Task
 		// Hail
 		println!("{}.{} rotating...", self.cfg.name, self.name);
 
-		// TODO: Implement task_rotate.
-		true
+		// Create rotate
+		let l_rotate = Rotate::new(self);
+
+		// Run rotate
+		return l_rotate.run();
 	}
 
 	/// Run
