@@ -4,7 +4,7 @@ name = "test"
 commands = ["touch {STAMP}.txt", "echo {STAMP}.txt"]
 enabled = false
 interval = 10
-path = "/home/cisco211/vault/test/linux"
+path = "/home/cisco211/Vault/test/linux"
 rotate = {daily = true, hourly = true, monthly = true, yearly = true}
 rotate_strategy = "move"
 singleton = true
@@ -13,7 +13,7 @@ singleton = true
 commands = ["cmd /C echo {NOW} > {STAMP}.txt", "cmd /C echo {STAMP}.txt"]
 enabled = true
 interval = 10
-path = "E:\\Cisco211\\Repository\\vault\\test\\windows"
+path = "E:\\Cisco211\\Repository\\Vault\\test\\windows"
 rotate = {daily = true, hourly = true, monthly = true, yearly = true}
 rotate_strategy = "move"
 singleton = true
