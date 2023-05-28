@@ -185,7 +185,7 @@ impl Rotate
 	}
 
 	/// Rotate
-	fn rotate(&self, a_expr: &str) -> bool
+	fn rotate(&self, a_expr: &str, a_verb: &str) -> bool
 	{
 		// Get tree
 		let mut l_tree = match self.list_tree(a_expr)
@@ -204,10 +204,14 @@ impl Rotate
 		l_tree.pop_last();
 
 		// Debug
+		if self.task.cfg.debug
 		{
 			dbg!(a_expr);
 			dbg!(l_tree.clone());
 		}
+
+		// Create counter
+		let mut l_count: usize = 0;
 
 		// Iterate over tree
 		for (_i_k, i_v) in &l_tree
@@ -238,7 +242,19 @@ impl Rotate
 				{
 					return false;
 				}
+				l_count += 1;
 			}
+		}
+
+		// Display rotation status
+		if l_count > 0
+		{
+			let l_word = match l_count
+			{
+				1 => "file",
+				_ => "files",
+			};
+			println!("{}.{} rotate {} {}d {} {}.", self.task.cfg.name, self.task.name, a_verb, self.task.task.rotate_strategy, l_count, l_word);
 		}
 
 		// Done
@@ -321,7 +337,7 @@ impl Rotate
 		}
 
 		// Perform rotation
-		return self.rotate(REGEXP_DAILY);
+		return self.rotate(REGEXP_DAILY, "daily");
 	}
 
 	/// Run hourly
@@ -334,7 +350,7 @@ impl Rotate
 		}
 
 		// Perform rotation
-		return self.rotate(REGEXP_HOURLY);
+		return self.rotate(REGEXP_HOURLY, "hourly");
 	}
 
 	/// Run monthly
@@ -347,7 +363,7 @@ impl Rotate
 		}
 
 		// Perform rotation
-		return self.rotate(REGEXP_MONTHLY);
+		return self.rotate(REGEXP_MONTHLY, "monthly");
 	}
 
 	/// Run yearly
@@ -360,6 +376,6 @@ impl Rotate
 		}
 
 		// Perform rotation
-		return self.rotate(REGEXP_YEARLY);
+		return self.rotate(REGEXP_YEARLY, "yearly");
 	}
 }

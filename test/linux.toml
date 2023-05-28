@@ -6,6 +6,7 @@ enabled = true
 interval = 10
 path = "/home/cisco211/vault/test/linux"
 rotate = {daily = true, hourly = true, monthly = true, yearly = true}
+rotate_strategy = "move"
 singleton = true
 
 [tasks.windows]
@@ -14,4 +15,5 @@ enabled = false
 interval = 10
 path = "E:\\Cisco211\\Repository\\vault\\test\\windows"
 rotate = {daily = true, hourly = true, monthly = true, yearly = true}
+rotate_strategy = "move"
 singleton = true
