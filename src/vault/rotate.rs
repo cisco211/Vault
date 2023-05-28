@@ -36,7 +36,7 @@ impl Rotate
 			Ok(_) => return true,
 			Err(m_error) =>
 			{
-				println!("Error: Failed to delete file '{}'!\n{}", a_file, m_error.to_string());
+				println!("Error: {}.{} failed to delete file '{}'!\n{}", self.task.cfg.name, self.task.name, a_file, m_error.to_string());
 				return false;
 			},
 		}
@@ -52,7 +52,7 @@ impl Rotate
 			Ok(_) => return true,
 			Err(m_error) =>
 			{
-				println!("Error: Failed to move file '{}' into '{}/{}'!\n{}", a_file, DIRECTORY_MOVE, a_file, m_error.to_string());
+				println!("Error: {}.{} failed to move file '{}' into '{}/{}'!\n{}", self.task.cfg.name, self.task.name, a_file, DIRECTORY_MOVE, a_file, m_error.to_string());
 				return false;
 			}
 		}
@@ -74,7 +74,7 @@ impl Rotate
 			Ok(m_items) => m_items,
 			Err(m_error) =>
 			{
-				println!("Error: Failed to read directory'{}'!\n{}", self.task.task.path.display(), m_error.to_string());
+				println!("Error: {}.{} failed to read directory '{}'!\n{}", self.task.cfg.name, self.task.name, self.task.task.path.display(), m_error.to_string());
 				return l_list;
 			},
 		};
@@ -134,7 +134,7 @@ impl Rotate
 			Ok(m_regex) => m_regex,
 			Err(m_error) =>
 			{
-				println!("Error: Invalid regular expression'{}'!\n{}", a_expr, m_error.to_string());
+				println!("Error: {}.{} invalid regular expression '{}'!\n{}", self.task.cfg.name, self.task.name, a_expr, m_error.to_string());
 				return None;
 			}
 		};
@@ -268,7 +268,7 @@ impl Rotate
 						Ok(_) => {},
 						Err(m_error) =>
 						{
-							println!("Error: Failed to create directory'{}'!\n{}", l_path.display(), m_error.to_string());
+							println!("Error: {}.{} failed to create directory '{}'!\n{}", self.task.cfg.name, self.task.name, l_path.display(), m_error.to_string());
 							return false;
 						}
 					}
@@ -278,7 +278,7 @@ impl Rotate
 			// Unknown
 			_ =>
 			{
-				println!("Error: Unknown rotate strategy '{}'!", self.task.task.rotate_strategy);
+				println!("Error: {}.{} unknown rotate strategy '{}'!", self.task.cfg.name, self.task.name, self.task.task.rotate_strategy);
 				return false;
 			},
 		}

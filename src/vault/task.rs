@@ -18,10 +18,10 @@ pub const MACRO_STAMP: &str = "{STAMP}";
 pub struct Task
 {
 	/// Cfg
-	cfg: Config,
+	pub cfg: Config,
 
 	/// Name
-	name: String,
+	pub name: String,
 
 	/// Task
 	pub task: ConfigTask,
@@ -50,7 +50,7 @@ impl Task
 			Ok(_) => {},
 			Err(m_error) =>
 			{
-				println!("Error: {}.{} failed to cd into '{}'!\n{}", self.task.config, self.name, l_path_s, m_error.to_string());
+				println!("Error: {}.{} failed to change directory into '{}'!\n{}", self.task.config, self.name, l_path_s, m_error.to_string());
 				return false;
 			}
 		}
@@ -267,7 +267,7 @@ impl Task
 		// Create task
 		let mut l_task = Task
 		{
-			cfg: (*a_cfg).clone(),
+			cfg: a_cfg.clone(),
 			name: a_task.to_string(),
 			task: ConfigTask::default(),
 		};
@@ -275,7 +275,7 @@ impl Task
 		// Empty task
 		if l_task.name.is_empty()
 		{
-			println!("Error: Task is empty!");
+			println!("Error: Task name for configuration '{}' is empty!", a_cfg.name);
 			return false;
 		}
 
