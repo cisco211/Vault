@@ -18,6 +18,7 @@ pub struct Config
 	pub name: String,
 
 	/// Tasks
+	/// TODO: Solve ordering issue.
 	pub tasks: HashMap<String, ConfigTask>,
 }
 

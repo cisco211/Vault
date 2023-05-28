@@ -23,6 +23,14 @@ pub struct Args
 	#[arg(short, long, default_value_t  = false)]
 	pub debug: bool,
 
+	/// Output sample configuration file.
+	///
+	/// This will output a sample configuration file.
+	/// It will describe all configuration properties.
+	/// The configuration format is TOML (Tom's Obvious Minimal Language).
+	#[arg(short, long, default_value_t = false)]
+	pub sample: bool,
+
 	/// Task to be executed
 	///
 	/// Empty = Do nothing.
