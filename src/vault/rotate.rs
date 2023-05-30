@@ -96,6 +96,7 @@ impl Rotate
 				Err(_m_error) => {},
 			}
 		}
+		l_list.sort();
 		return l_list;
 	}
 

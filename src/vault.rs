@@ -154,6 +154,12 @@ enabled = false
 # Default: 0
 interval = 10
 
+# The task execution order for this task.
+# When you run all tasks,
+# this setting allows you to determine the order of the tasks to be run.
+# Default: 0
+order = 0
+
 # The path to the directory for this task.
 # You can see this like the working directory of this task.
 # Ideally, this is an absolute path.

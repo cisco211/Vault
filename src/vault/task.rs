@@ -1,4 +1,5 @@
 // Use
+use std::cmp::Ordering;
 use std::env;
 use std::process::Command;
 use std::vec::Vec;
@@ -301,14 +302,17 @@ impl Task
 		// Status bool
 		let mut l_status = true;
 
-		// Clone config
-		let l_cfg = self.cfg.clone();
+		// Copy values into a vector
+		let mut l_tasks: Vec<ConfigTask> = self.cfg.tasks.values().cloned().collect();
+
+		// Sort tasks by order
+		l_tasks.sort_by(Task::sort_by_order);
 
 		// Iterate over tasks
-		for i_task in l_cfg.tasks.keys()
+		for i_task in l_tasks
 		{
 			// Set name
-			self.name = i_task.clone();
+			self.name = i_task.task;
 
 			// Run task
 			if !self.run_one()
@@ -351,4 +355,22 @@ impl Task
 		// Done
 		return true;
 	}
+
+	/// Sort by order
+	fn sort_by_order(a_left: &ConfigTask, a_right: &ConfigTask) -> Ordering
+	{
+		if a_left.order < a_right.order
+		{
+			return Ordering::Less;
+		}
+		else if a_left.order == a_right.order
+		{
+			return Ordering::Equal;
+		}
+		else
+		{
+			return Ordering::Greater;
+		}
+	}
+
 }

@@ -18,7 +18,6 @@ pub struct Config
 	pub name: String,
 
 	/// Tasks
-	/// TODO: Solve ordering issue.
 	pub tasks: HashMap<String, ConfigTask>,
 }
 
@@ -50,13 +49,7 @@ impl Config
 		}
 		match self.tasks.get(a_task)
 		{
-			Some(m_task) =>
-			{
-				let mut l_task = m_task.clone();
-				l_task.config = self.name.to_string();
-				l_task.task = a_task.to_string();
-				return Some(l_task);
-			},
+			Some(m_task) => return Some(m_task.clone()),
 			None =>
 			{
 				println!("Error: {}.{} does not exist!", self.name, a_task);
@@ -68,7 +61,10 @@ impl Config
 	/// Load
 	pub fn load(a_path: &PathBuf) -> Option<Config>
 	{
+		// Path
 		let l_path: PathBuf;
+
+		// Absolute path
 		if a_path.is_absolute()
 		{
 			l_path = a_path.to_path_buf();
@@ -83,6 +79,8 @@ impl Config
 				return None;
 			}
 		}
+
+		// Relative path
 		else
 		{
 			match env::current_dir()
@@ -106,6 +104,8 @@ impl Config
 				},
 			}
 		}
+
+		// Get data from file
 		let l_data = match fs::read_to_string(l_path)
 		{
 			Ok(m_data) => m_data,
@@ -115,15 +115,27 @@ impl Config
 				return None;
 			}
 		};
-		match toml::from_str(l_data.as_str())
+
+		// Parse into config
+		let mut l_config: Config = match toml::from_str(l_data.as_str())
 		{
-			Ok(m_config) => return Some(m_config),
+			Ok(m_config) => m_config,
 			Err(m_error) =>
 			{
 				println!("Error: Failed to parse configuration file '{}'!\n{}", a_path.display(), m_error.to_string());
 				return None;
 			}
+		};
+
+		// Iterate over task and assign their config and task strings
+		for (i_k, i_v) in l_config.tasks.iter_mut()
+		{
+			i_v.config = l_config.name.clone();
+			i_v.task = i_k.clone();
 		}
+
+		// Done
+		return Some(l_config);
 	}
 
 }
@@ -144,6 +156,9 @@ pub struct ConfigTask
 
 	/// Interval
 	pub interval: i64,
+
+	/// Order
+	pub order: u64,
 
 	/// Path
 	pub path: PathBuf,
@@ -173,6 +188,7 @@ impl Default for ConfigTask
 			config: String::new(),
 			enabled: false,
 			interval: 0,
+			order: 0,
 			path: PathBuf::new(),
 			rotate: ConfigTaskRotate::default(),
 			rotate_strategy: String::from("move"),
