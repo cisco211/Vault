@@ -1,9 +1,9 @@
 [package]
 authors = ["cisco211 <TjSBMD1810@yahoo.de>"]
-description = "vault = A task based backup manager."
+description = "Vault = A task based backup manager."
 edition = "2021"
 name = "vault"
-version = "0.1.0"
+version = "1.0.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
